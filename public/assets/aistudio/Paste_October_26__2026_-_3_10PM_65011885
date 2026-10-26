@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BUPC Pharmacy | Predictive Analytics & Management Portal</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Chart.js for Visual Analytics & Predictions -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    @media print {
+      body * { visibility: hidden; }
+      #printableSlip, #printableSlip * { visibility: visible; }
+      #printableSlip { position: absolute; left: 0; top: 0; width: 100%; display: block !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col antialiased">
+
+  <!-- Header -->
+  <header class="bg-[#0b2545] text-white border-b-4 border-amber-500 sticky top-0 z-40 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-lg bg-amber-500 text-[#0b2545] flex items-center justify-center font-black text-xl shadow">
+          <i class="fa-solid fa-chart-line"></i>
+        </div>
+        <div>
+          <h1 class="font-extrabold text-sm sm:text-base tracking-wide uppercase text-white flex items-center gap-2">
+            BUPC PHARMACY INFIRMARY
+            <span class="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded uppercase">AI & DW</span>
+          </h1>
+          <p class="text-xs text-slate-300">Bicol University Polangui Campus</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center space-x-1 sm:space-x-2">
+        <button onclick="switchTab('analytics')" id="btn-tab-analytics" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500 text-slate-900 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-brain"></i> <span class="hidden sm:inline">Predictive Analytics</span>
+        </button>
+        <button onclick="switchTab('prescriptions')" id="btn-tab-prescriptions" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:bg-slate-800 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-file-prescription"></i> <span class="hidden sm:inline">Prescription Desk</span>
+        </button>
+        <button onclick="switchTab('drugs')" id="btn-tab-drugs" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:bg-slate-800 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-pills"></i> <span class="hidden sm:inline">Drug Formulary</span>
+        </button>
+        <button onclick="switchTab('patients')" id="btn-tab-patients" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:bg-slate-800 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-hospital-user"></i> <span class="hidden sm:inline">Patients</span>
+        </button>
+        <button onclick="switchTab('prescribers')" id="btn-tab-prescribers" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:bg-slate-800 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-user-doctor"></i> <span class="hidden sm:inline">Prescribers</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Metric KPI Bar -->
+  <section class="bg-white border-b border-slate-200 py-3 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="p-2.5 bg-blue-50 text-blue-700 rounded-lg"><i class="fa-solid fa-file-medical text-lg"></i></div>
+        <div>
+          <p class="text-[11px] font-semibold uppercase text-slate-500">Total Rx Recorded</p>
+          <h4 id="statTotalRx" class="text-xl font-bold text-slate-900 leading-tight">0</h4>
+        </div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <div class="p-2.5 bg-amber-50 text-amber-700 rounded-lg"><i class="fa-solid fa-arrow-trend-up text-lg"></i></div>
+        <div>
+          <p class="text-[11px] font-semibold uppercase text-slate-500">Projected 30-Day Demand</p>
+          <h4 id="statForecastUnits" class="text-xl font-bold text-amber-600 leading-tight">-- units</h4>
+        </div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <div class="p-2.5 bg-emerald-50 text-emerald-700 rounded-lg"><i class="fa-solid fa-sack-dollar text-lg"></i></div>
+        <div>
+          <p class="text-[11px] font-semibold uppercase text-slate-500">Projected 30-Day Budget</p>
+          <h4 id="statForecastCost" class="text-xl font-bold text-emerald-700 leading-tight">₱0.00</h4>
+        </div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <div class="p-2.5 bg-purple-50 text-purple-700 rounded-lg"><i class="fa-solid fa-capsules text-lg"></i></div>
+        <div>
+          <p class="text-[11px] font-semibold uppercase text-slate-500">Active Formulary Items</p>
+          <h4 id="statDrugCount" class="text-xl font-bold text-purple-700 leading-tight">0</h4>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main View Area -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+
+    <!-- VIEW 0: PREDICTIVE ANALYTICS & FORECASTING -->
+    <div id="tab-analytics" class="space-y-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+        <div>
+          <h2 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-crystal-ball text-amber-500"></i> BUPC Predictive Health Analytics
+          </h2>
+          <p class="text-xs text-slate-500">Linear regression forecasting, demand velocity, and inventory exhaustion projections</p>
+        </div>
+        <button onclick="renderAnalytics()" class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+          <i class="fa-solid fa-arrows-rotate text-blue-600"></i> Refresh Models
+        </button>
+      </div>
+
+      <!-- Charts Row 1: Demand Forecast & Financial Projection -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left: Consumption Trend + 30-Day Prediction (7 cols) -->
+        <div class="lg:col-span-7 bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="font-bold text-sm text-slate-800">Prescription Consumption Velocity & Projection</h3>
+              <p class="text-[11px] text-slate-400">Historical units dispensed (solid) vs. projected regression trend (dashed)</p>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <div class="flex items-center gap-1" role="group" aria-label="Dispense trend chart controls">
+                <button type="button" onclick="panDemandChart(-1)" title="Pan chart left" aria-label="Pan chart left" class="w-7 h-7 rounded border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40" id="demandPanLeft">
+                  <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                </button>
+                <button type="button" onclick="zoomDemandChart(-1)" title="Zoom out" aria-label="Zoom out" class="w-7 h-7 rounded border border-slate-200 text-slate-600 hover:bg-slate-100">
+                  <i class="fa-solid fa-magnifying-glass-minus text-[10px]"></i>
+                </button>
+                <button type="button" onclick="zoomDemandChart(1)" title="Zoom in" aria-label="Zoom in" class="w-7 h-7 rounded border border-slate-200 text-slate-600 hover:bg-slate-100">
+                  <i class="fa-solid fa-magnifying-glass-plus text-[10px]"></i>
+                </button>
+                <button type="button" onclick="panDemandChart(1)" title="Pan chart right" aria-label="Pan chart right" class="w-7 h-7 rounded border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40" id="demandPanRight">
+                  <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                </button>
+                <button type="button" onclick="resetDemandChartZoom()" title="Reset chart zoom" aria-label="Reset chart zoom" class="w-7 h-7 rounded border border-slate-200 text-slate-600 hover:bg-slate-100">
+                  <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
+                </button>
+              </div>
+              <span id="demandZoomStatus" class="hidden sm:inline text-[10px] text-slate-400 whitespace-nowrap"></span>
+              <span class="hidden xl:inline text-[11px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">Next 30-Day Outlook</span>
+            </div>
+          </div>
+          <div class="h-64">
+            <canvas id="demandForecastChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Right: Financial & Insurance Coverage Forecast (5 cols) -->
+        <div class="lg:col-span-5 bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="font-bold text-sm text-slate-800">Financial Impact & Subsidy Projection</h3>
+              <p class="text-[11px] text-slate-400">All recorded dates: patient cost vs. insurance subsidy</p>
+            </div>
+          </div>
+          <div class="flex items-center justify-between">
+            <span id="financialZoomStatus" class="text-[10px] text-slate-400"></span>
+            <div class="flex items-center gap-1" role="group" aria-label="Financial chart controls">
+              <button type="button" onclick="panFinancialChart(-1)" title="Pan chart left" aria-label="Pan chart left" class="w-7 h-7 rounded border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40" id="financialPanLeft">
+                <i class="fa-solid fa-chevron-left text-[10px]"></i>
+              </button>
+              <button type="button" onclick="zoomFinancialChart(-1)" title="Zoom out" aria-label="Zoom out" class="w-7 h-7 rounded border border-slate-200 text-slate-600 hover:bg-slate-100">
+                <i class="fa-solid fa-magnifying-glass-minus text-[10px]"></i>
+              </button>
+              <button type="button" onclick="zoomFinancialChart(1)" title="Zoom in" aria-label="Zoom in" class="w-7 h-7 rounded border border-slate-200 text-slate-600 hover:bg-slate-100">
+                <i class="fa-solid fa-magnifying-glass-plus text-[10px]"></i>
+              </button>
+              <button type="button" onclick="panFinancialChart(1)" title="Pan chart right" aria-label="Pan chart right" class="w-7 h-7 rounded border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40" id="financialPanRight">
+                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+              </button>
+              <button type="button" onclick="resetFinancialChartZoom()" title="Reset chart zoom" aria-label="Reset chart zoom" class="w-7 h-7 rounded border border-slate-200 text-slate-600 hover:bg-slate-100">
+                <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
+              </button>
+            </div>
+          </div>
+          <div class="h-64">
+            <canvas id="financialChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row 2: Drug Breakdown & Interactive Surge Simulator -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left: Top High-Velocity Drugs (5 cols) -->
+        <div class="lg:col-span-5 bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+          <h3 class="font-bold text-sm text-slate-800">Highest-Velocity Medications</h3>
+          <p class="text-[11px] text-slate-400">Top 8 medications ranked by total units dispensed</p>
+          <div class="h-72">
+            <canvas id="drugShareChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Right: Campus Surge Scenario Simulator (7 cols) -->
+        <div class="lg:col-span-7 bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between border-b pb-2">
+              <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-sliders text-amber-600"></i> Campus Demand Surge Simulator
+              </h3>
+              <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-bold">What-If Modeling</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-2">
+              Estimate procurement stock required when an influenza spike, athletic meet, or midterms surge occurs on campus.
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mt-4">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Target Medication</label>
+                <select id="simDrugSelect" onchange="runSurgeSimulation()" class="w-full border border-slate-300 rounded p-2 text-xs bg-white font-medium">
+                  <!-- dynamically filled -->
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Surge Factor (% Increase)</label>
+                <select id="simSurgePct" onchange="runSurgeSimulation()" class="w-full border border-slate-300 rounded p-2 text-xs bg-white font-medium">
+                  <option value="0">Normal Baseline (+0%)</option>
+                  <option value="25">Midterm Stress / Rainy Season (+25%)</option>
+                  <option value="50">Flu Outbreak / Exam Week (+50%)</option>
+                  <option value="100">Intramurals / Major Campus Event (+100%)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Forecast Horizon</label>
+                <select id="simHorizon" onchange="runSurgeSimulation()" class="w-full border border-slate-300 rounded p-2 text-xs bg-white font-medium">
+                  <option value="15">Next 15 Days</option>
+                  <option value="30" selected>Next 30 Days</option>
+                  <option value="60">Next 60 Days</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Baseline History</label>
+                <select id="simBaselineDays" onchange="runSurgeSimulation()" class="w-full border border-slate-300 rounded p-2 text-xs bg-white font-medium">
+                  <option value="30">Last 30 Days</option>
+                  <option value="90">Last 90 Days</option>
+                  <option value="all">All Available</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Stock On Hand</label>
+                <input type="number" id="simStockOnHand" min="0" step="1" placeholder="Enter units" oninput="runSurgeSimulation()" class="w-full border border-slate-300 rounded p-2 text-xs bg-white font-medium" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Simulation Output Box -->
+          <div class="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200 grid grid-cols-2 xl:grid-cols-4 gap-3 text-center">
+            <div>
+              <p class="text-[10px] uppercase font-bold text-slate-400">Baseline Daily Rate</p>
+              <h5 id="simVelocityLabel" class="text-base font-extrabold text-slate-800 mt-0.5">0.0 units/day</h5>
+              <p id="simBaselineCoverage" class="text-[10px] text-slate-400 mt-0.5">No history selected</p>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase font-bold text-amber-600">Forecast Demand</p>
+              <h5 id="simUnitsNeededLabel" class="text-base font-extrabold text-amber-600 mt-0.5">0 units</h5>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase font-bold text-blue-700">Additional Units Needed</p>
+              <h5 id="simReorderLabel" class="text-base font-extrabold text-blue-700 mt-0.5">Enter stock</h5>
+              <p id="simCoverageLabel" class="text-[10px] text-slate-400 mt-0.5">Stock coverage unavailable</p>
+            </div>
+            <div>
+              <p class="text-[10px] uppercase font-bold text-emerald-700">Estimated Billed Value</p>
+              <h5 id="simBudgetLabel" class="text-base font-extrabold text-emerald-700 mt-0.5">₱0.00</h5>
+            </div>
+          </div>
+          <p class="text-[10px] text-slate-400">Value estimate uses historical billed amount per unit, not supplier acquisition cost.</p>
+
+          <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 mt-4">
+            <section>
+              <h4 class="text-xs font-bold text-slate-700 mb-2">Scenario Comparison</h4>
+              <div class="overflow-x-auto border border-slate-200 rounded-lg">
+                <table class="w-full text-left text-[10px] text-slate-600">
+                  <thead class="bg-slate-100 text-slate-700 uppercase font-bold">
+                    <tr>
+                      <th class="p-2">Scenario</th>
+                      <th class="p-2 text-right">Demand</th>
+                      <th class="p-2 text-right">Additional</th>
+                      <th class="p-2 text-right">Est. Value</th>
+                    </tr>
+                  </thead>
+                  <tbody id="simScenarioRows">
+                    <tr><td colspan="4" class="p-3 text-center text-slate-400">Select a medication to compare scenarios.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+            <section>
+              <h4 class="text-xs font-bold text-slate-700 mb-2">Projected Demand vs. Stock</h4>
+              <div class="h-48 relative">
+                <canvas id="simForecastChart" class="hidden"></canvas>
+                <p id="simForecastMessage" class="absolute inset-0 flex items-center justify-center text-center text-[11px] text-slate-400">Select a medication with dated dispense records.</p>
+              </div>
+            </section>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- VIEW 1: PRESCRIPTIONS (FACT PRESCRIPTION & DISPENSING) -->
+    <div id="tab-prescriptions" class="hidden space-y-6">
+      
+      <!-- Dispensing Action Bar -->
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
+        <div class="relative w-full sm:w-80">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+          <input type="text" id="rxSearchInput" oninput="filterPrescriptions()" placeholder="Search patient, drug, or doctor..." 
+            class="w-full pl-9 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#0b2545] outline-none" />
+        </div>
+        <button onclick="openDispenseModal()" class="w-full sm:w-auto px-4 py-2 bg-[#0b2545] hover:bg-slate-800 text-amber-400 font-bold rounded-lg text-xs flex items-center justify-center gap-2 shadow transition">
+          <i class="fa-solid fa-plus-circle text-amber-400"></i>
+          <span>Dispense New Prescription</span>
+        </button>
+      </div>
+
+      <!-- Fact Prescription Table -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-600">
+            <thead class="bg-slate-100 text-slate-700 uppercase font-bold border-b border-slate-200">
+              <tr>
+                <th class="p-3.5">Rx ID</th>
+                <th class="p-3.5">Date</th>
+                <th class="p-3.5">Patient</th>
+                <th class="p-3.5">Drug Dispensed</th>
+                <th class="p-3.5">Prescriber (MD)</th>
+                <th class="p-3.5 text-center">Qty / Days</th>
+                <th class="p-3.5 text-right">Total Amount</th>
+                <th class="p-3.5 text-right">Out-of-Pocket</th>
+                <th class="p-3.5 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="prescriptionTableBody" class="divide-y divide-slate-100 font-medium">
+              <tr>
+                <td colspan="9" class="p-6 text-center text-slate-400">Loading prescription facts from Supabase...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 2: DIM_DRUG (FORMULARY) -->
+    <div id="tab-drugs" class="hidden space-y-4">
+      <div class="flex justify-between items-center gap-3">
+        <h3 class="text-sm font-bold text-slate-800">Drug Formulary (`dim_drug`)</h3>
+        <button onclick="openAddDrugModal()" class="px-3.5 py-2 bg-[#0b2545] text-white rounded-lg text-xs font-bold hover:bg-slate-800 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-plus text-amber-400"></i> Add New Drug
+        </button>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <table class="w-full text-left text-xs text-slate-600">
+          <thead class="bg-slate-100 text-slate-700 uppercase font-bold border-b border-slate-200">
+            <tr>
+              <th class="p-3.5">Drug ID</th>
+              <th class="p-3.5">Drug Name</th>
+              <th class="p-3.5">Brand Name</th>
+              <th class="p-3.5">Generic Name</th>
+              <th class="p-3.5">Dosage Form</th>
+              <th class="p-3.5">Strength</th>
+            </tr>
+          </thead>
+          <tbody id="drugTableBody" class="divide-y divide-slate-100 font-medium">
+            <tr><td colspan="6" class="p-6 text-center text-slate-400">Loading drugs...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VIEW 3: DIM_PATIENT -->
+    <div id="tab-patients" class="hidden space-y-4">
+      <div class="flex justify-between items-center gap-3">
+        <h3 class="text-sm font-bold text-slate-800">Patient Directory (`dim_patient`)</h3>
+        <button onclick="openAddPatientModal()" class="px-3.5 py-2 bg-[#0b2545] text-white rounded-lg text-xs font-bold hover:bg-slate-800 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-user-plus text-amber-400"></i> Add New Patient
+        </button>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <table class="w-full text-left text-xs text-slate-600">
+          <thead class="bg-slate-100 text-slate-700 uppercase font-bold border-b border-slate-200">
+            <tr>
+              <th class="p-3.5">Patient ID</th>
+              <th class="p-3.5">Full Name</th>
+              <th class="p-3.5">Date of Birth</th>
+              <th class="p-3.5">Gender</th>
+              <th class="p-3.5">Address</th>
+            </tr>
+          </thead>
+          <tbody id="patientTableBody" class="divide-y divide-slate-100 font-medium">
+            <tr><td colspan="5" class="p-6 text-center text-slate-400">Loading patients...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VIEW 4: DIM_PRESCRIBER -->
+    <div id="tab-prescribers" class="hidden space-y-4">
+      <div class="flex justify-between items-center gap-3">
+        <h3 class="text-sm font-bold text-slate-800">Prescribing Clinicians (`dim_prescriber`)</h3>
+        <button onclick="openAddPrescriberModal()" class="px-3.5 py-2 bg-[#0b2545] text-white rounded-lg text-xs font-bold hover:bg-slate-800 transition flex items-center gap-1.5">
+          <i class="fa-solid fa-user-md text-amber-400"></i> Add Prescriber
+        </button>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <table class="w-full text-left text-xs text-slate-600">
+          <thead class="bg-slate-100 text-slate-700 uppercase font-bold border-b border-slate-200">
+            <tr>
+              <th class="p-3.5">ID</th>
+              <th class="p-3.5">Physician Name</th>
+              <th class="p-3.5">NPI Number</th>
+              <th class="p-3.5">Specialty</th>
+            </tr>
+          </thead>
+          <tbody id="prescriberTableBody" class="divide-y divide-slate-100 font-medium">
+            <tr><td colspan="4" class="p-6 text-center text-slate-400">Loading prescribers...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: DISPENSE PRESCRIPTION -->
+  <div id="dispenseModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-2xl w-full shadow-2xl overflow-hidden border border-slate-200">
+      <div class="bg-[#0b2545] text-white px-5 py-3.5 flex justify-between items-center">
+        <h3 class="font-bold text-sm flex items-center gap-2">
+          <i class="fa-solid fa-file-prescription text-amber-400"></i> Dispense Prescription
+        </h3>
+        <button onclick="closeModal('dispenseModal')" class="text-slate-300 hover:text-white">&times;</button>
+      </div>
+
+      <form id="dispenseForm" onsubmit="handleDispensePrescription(event)" class="p-5 space-y-4">
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Select Patient *</label>
+            <select id="dispPatientId" required class="w-full border border-slate-300 rounded p-2 text-xs bg-white font-medium">
+              <option value="">-- Choose Patient --</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Prescribing Doctor *</label>
+            <select id="dispPrescriberId" required class="w-full border border-slate-300 rounded p-2 text-xs bg-white font-medium">
+              <option value="">-- Choose Prescriber --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Select Drug *</label>
+            <select id="dispDrugId" required class="w-full border border-slate-300 rounded p-2 text-xs bg-white font-medium">
+              <option value="">-- Choose Medication --</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Dispensing Pharmacy *</label>
+            <select id="dispPharmacyId" required class="w-full border border-slate-300 rounded p-2 text-xs bg-white font-medium">
+              <option value="">-- Choose Branch --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
+          <span class="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 block">Prescription Facts & Billing</span>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div>
+              <label class="block text-[10px] font-bold text-slate-600 mb-1">Qty Dispensed *</label>
+              <input type="number" id="dispQuantity" min="1" value="30" required class="w-full border border-slate-300 rounded p-1.5 text-xs bg-white" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-600 mb-1">Days Supply *</label>
+              <input type="number" id="dispDaysSupply" min="1" value="30" required class="w-full border border-slate-300 rounded p-1.5 text-xs bg-white" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-600 mb-1">Total Amount (₱) *</label>
+              <input type="number" step="0.01" id="dispTotalAmount" value="350.00" oninput="calcCost()" required class="w-full border border-slate-300 rounded p-1.5 text-xs bg-white" />
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-slate-600 mb-1">Insurance (₱)</label>
+              <input type="number" step="0.01" id="dispInsurance" value="0.00" oninput="calcCost()" class="w-full border border-slate-300 rounded p-1.5 text-xs bg-white" />
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center pt-2 border-t border-slate-200 text-xs">
+            <span class="font-bold text-slate-600">Calculated Patient Out-of-Pocket Cost:</span>
+            <span id="dispTotalCostPreview" class="text-base font-extrabold text-emerald-700">₱350.00</span>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2 border-t">
+          <button type="button" onclick="closeModal('dispenseModal')" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-[#0b2545] hover:bg-slate-800 text-amber-400 font-extrabold text-xs rounded shadow">Record Dispensation</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODALS FOR DIMENSIONS (Drug, Patient, Prescriber) -->
+  <div id="addDrugModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200">
+      <div class="bg-[#0b2545] text-white px-5 py-3.5 flex justify-between items-center">
+        <h3 class="font-bold text-xs uppercase tracking-wide">Add Drug Record (`dim_drug`)</h3>
+        <button onclick="closeModal('addDrugModal')" class="text-slate-300 hover:text-white">&times;</button>
+      </div>
+      <form onsubmit="handleCreateDrug(event)" class="p-5 space-y-3">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 mb-1">Drug Name *</label>
+          <input type="text" id="drugName" required placeholder="Amoxicillin 500mg" class="w-full border border-slate-300 rounded p-1.5 text-xs" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Brand Name</label>
+            <input type="text" id="drugBrand" placeholder="Amoxil" class="w-full border border-slate-300 rounded p-1.5 text-xs" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Generic Name</label>
+            <input type="text" id="drugGeneric" placeholder="Amoxicillin Trihydrate" class="w-full border border-slate-300 rounded p-1.5 text-xs" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Dosage Form</label>
+            <input type="text" id="drugForm" placeholder="Capsule, Tablet, Syrup" class="w-full border border-slate-300 rounded p-1.5 text-xs" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Strength</label>
+            <input type="text" id="drugStrength" placeholder="500 mg" class="w-full border border-slate-300 rounded p-1.5 text-xs" />
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t">
+          <button type="button" onclick="closeModal('addDrugModal')" class="px-3 py-1.5 text-xs bg-slate-100 text-slate-700 rounded">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 text-xs bg-[#0b2545] text-amber-400 font-bold rounded">Save Drug</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="addPatientModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200">
+      <div class="bg-[#0b2545] text-white px-5 py-3.5 flex justify-between items-center">
+        <h3 class="font-bold text-xs uppercase tracking-wide">Register Patient (`dim_patient`)</h3>
+        <button onclick="closeModal('addPatientModal')" class="text-slate-300 hover:text-white">&times;</button>
+      </div>
+      <form onsubmit="handleCreatePatient(event)" class="p-5 space-y-3">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">First Name *</label>
+            <input type="text" id="patFirstName" required placeholder="Juan" class="w-full border border-slate-300 rounded p-1.5 text-xs" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Last Name</label>
+            <input type="text" id="patLastName" placeholder="Dela Cruz" class="w-full border border-slate-300 rounded p-1.5 text-xs" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Date of Birth</label>
+            <input type="date" id="patDob" class="w-full border border-slate-300 rounded p-1.5 text-xs" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Gender</label>
+            <select id="patGender" class="w-full border border-slate-300 rounded p-1.5 text-xs bg-white">
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 mb-1">Address / BUPC College</label>
+          <input type="text" id="patAddress" placeholder="Polangui, Albay / CS Dept" class="w-full border border-slate-300 rounded p-1.5 text-xs" />
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t">
+          <button type="button" onclick="closeModal('addPatientModal')" class="px-3 py-1.5 text-xs bg-slate-100 text-slate-700 rounded">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 text-xs bg-[#0b2545] text-amber-400 font-bold rounded">Save Patient</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="addPrescriberModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200">
+      <div class="bg-[#0b2545] text-white px-5 py-3.5 flex justify-between items-center">
+        <h3 class="font-bold text-xs uppercase tracking-wide">Register Prescriber (`dim_prescriber`)</h3>
+        <button onclick="closeModal('addPrescriberModal')" class="text-slate-300 hover:text-white">&times;</button>
+      </div>
+      <form onsubmit="handleCreatePrescriber(event)" class="p-5 space-y-3">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">First Name</label>
+            <input type="text" id="docFirstName" placeholder="Maria" class="w-full border border-slate-300 rounded p-1.5 text-xs" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Last Name</label>
+            <input type="text" id="docLastName" placeholder="Santos, MD" class="w-full border border-slate-300 rounded p-1.5 text-xs" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">NPI / License # *</label>
+            <input type="number" id="docNpi" required placeholder="1049281726" class="w-full border border-slate-300 rounded p-1.5 text-xs" />
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">Medical Specialty</label>
+            <input type="text" id="docSpecialty" placeholder="General Practice / Pediatrics" class="w-full border border-slate-300 rounded p-1.5 text-xs" />
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t">
+          <button type="button" onclick="closeModal('addPrescriberModal')" class="px-3 py-1.5 text-xs bg-slate-100 text-slate-700 rounded">Cancel</button>
+          <button type="submit" class="px-4 py-1.5 text-xs bg-[#0b2545] text-amber-400 font-bold rounded">Save Prescriber</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    // 1. Supabase Initialization
+    const SUPABASE_URL = "https://afzorhftbztxmwtgdpza.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_6bdfxLjp5yhsCIVFeD-aLw_VC_SvcBe";
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+    // Dimension Memory Cache
+    let drugs = [];
+    let patients = [];
+    let prescribers = [];
+    let pharmacies = [];
+    let prescriptions = [];
+
+    // Chart instances
+    let demandChartInstance = null;
+    let financialChartInstance = null;
+    let drugShareChartInstance = null;
+    let simForecastChartInstance = null;
+
+    function setDemandChartWindow(min, max) {
+      if (!demandChartInstance) return;
+
+      const pointCount = demandChartInstance.data.labels.length;
+      if (pointCount === 0) return;
+
+      const visibleCount = Math.min(pointCount, Math.max(2, max - min + 1));
+      const boundedMin = Math.max(0, Math.min(pointCount - visibleCount, min));
+      const boundedMax = boundedMin + visibleCount - 1;
+
+      demandChartInstance.options.scales.x.min = boundedMin;
+      demandChartInstance.options.scales.x.max = boundedMax;
+      demandChartInstance.update('none');
+
+      const status = document.getElementById('demandZoomStatus');
+      status.textContent = `${visibleCount} of ${pointCount} dates`;
+      document.getElementById('demandPanLeft').disabled = boundedMin === 0;
+      document.getElementById('demandPanRight').disabled = boundedMax === pointCount - 1;
+    }
+
+    function zoomDemandChart(direction) {
+      if (!demandChartInstance) return;
+
+      const pointCount = demandChartInstance.data.labels.length;
+      const currentMin = demandChartInstance.scales.x.min;
+      const currentMax = demandChartInstance.scales.x.max;
+      const currentCount = currentMax - currentMin + 1;
+      const nextCount = direction > 0
+        ? Math.max(2, Math.floor(currentCount / 1.5))
+        : Math.min(pointCount, Math.ceil(currentCount * 1.5));
+      const center = (currentMin + currentMax) / 2;
+      const nextMin = Math.round(center - (nextCount - 1) / 2);
+
+      setDemandChartWindow(nextMin, nextMin + nextCount - 1);
+    }
+
+    function panDemandChart(direction) {
+      if (!demandChartInstance) return;
+
+      const currentMin = demandChartInstance.scales.x.min;
+      const currentMax = demandChartInstance.scales.x.max;
+      const shift = Math.max(1, Math.round((currentMax - currentMin + 1) * 0.6)) * direction;
+      setDemandChartWindow(currentMin + shift, currentMax + shift);
+    }
+
+    function resetDemandChartZoom() {
+      if (!demandChartInstance) return;
+
+      const xScale = demandChartInstance.options.scales.x;
+      delete xScale.min;
+      delete xScale.max;
+      demandChartInstance.update('none');
+      document.getElementById('demandZoomStatus').textContent = `${demandChartInstance.data.labels.length} of ${demandChartInstance.data.labels.length} dates`;
+      document.getElementById('demandPanLeft').disabled = true;
+      document.getElementById('demandPanRight').disabled = true;
+    }
+
+    function setFinancialChartWindow(min, max) {
+      if (!financialChartInstance) return;
+
+      const pointCount = financialChartInstance.data.labels.length;
+      if (pointCount === 0) return;
+
+      const visibleCount = Math.min(pointCount, Math.max(2, max - min + 1));
+      const boundedMin = Math.max(0, Math.min(pointCount - visibleCount, min));
+      const boundedMax = boundedMin + visibleCount - 1;
+
+      financialChartInstance.options.scales.x.min = boundedMin;
+      financialChartInstance.options.scales.x.max = boundedMax;
+      financialChartInstance.update('none');
+
+      document.getElementById('financialZoomStatus').textContent = `${visibleCount} of ${pointCount} dates`;
+      document.getElementById('financialPanLeft').disabled = boundedMin === 0;
+      document.getElementById('financialPanRight').disabled = boundedMax === pointCount - 1;
+    }
+
+    function zoomFinancialChart(direction) {
+      if (!financialChartInstance) return;
+
+      const pointCount = financialChartInstance.data.labels.length;
+      const currentMin = financialChartInstance.scales.x.min;
+      const currentMax = financialChartInstance.scales.x.max;
+      const currentCount = currentMax - currentMin + 1;
+      const nextCount = direction > 0
+        ? Math.max(2, Math.floor(currentCount / 1.5))
+        : Math.min(pointCount, Math.ceil(currentCount * 1.5));
+      const center = (currentMin + currentMax) / 2;
+      const nextMin = Math.round(center - (nextCount - 1) / 2);
+
+      setFinancialChartWindow(nextMin, nextMin + nextCount - 1);
+    }
+
+    function panFinancialChart(direction) {
+      if (!financialChartInstance) return;
+
+      const currentMin = financialChartInstance.scales.x.min;
+      const currentMax = financialChartInstance.scales.x.max;
+      const shift = Math.max(1, Math.round((currentMax - currentMin + 1) * 0.6)) * direction;
+      setFinancialChartWindow(currentMin + shift, currentMax + shift);
+    }
+
+    function resetFinancialChartZoom() {
+      if (!financialChartInstance) return;
+
+      const xScale = financialChartInstance.options.scales.x;
+      delete xScale.min;
+      delete xScale.max;
+      financialChartInstance.update('none');
+      const pointCount = financialChartInstance.data.labels.length;
+      document.getElementById('financialZoomStatus').textContent = `${pointCount} of ${pointCount} dates`;
+      document.getElementById('financialPanLeft').disabled = true;
+      document.getElementById('financialPanRight').disabled = true;
+    }
+
+    // 2. Lifecycle
+    window.addEventListener('DOMContentLoaded', async () => {
+      await loadDimensions();
+      await loadPrescriptions();
+      renderAnalytics();
+    });
+
+    async function loadDimensions() {
+      try {
+        const [drugRes, patRes, docRes, pharmRes] = await Promise.all([
+          client.from('dim_drug').select('*').order('drug_name'),
+          client.from('dim_patient').select('*').order('last_name'),
+          client.from('dim_prescriber').select('*').order('last_name'),
+          client.from('dim_pharmacy').select('*').order('branch_name')
+        ]);
+
+        drugs = drugRes.data || [];
+        patients = patRes.data || [];
+        prescribers = docRes.data || [];
+        pharmacies = pharmRes.data || [];
+
+        renderDrugTable(drugs);
+        renderPatientTable(patients);
+        renderPrescriberTable(prescribers);
+        populateDropdowns();
+        populateSimDrugs();
+
+        document.getElementById('statDrugCount').innerText = drugs.length;
+      } catch (err) {
+        console.error("Error loading dimensional data:", err);
+      }
+    }
+
+    async function loadPrescriptions() {
+      try {
+        const { data, error } = await client
+          .from('fact_prescription')
+          .select(`
+            prescription_fact_id,
+            quantity_dispensed,
+            days_supply,
+            total_amount,
+            insurance_covered,
+            total_cost,
+            pharmacy_id,
+            prescriber_id,
+            drug_id,
+            patient_id,
+            date_id,
+            dim_drug (drug_name, brand_name, dosage_form, strength),
+            dim_patient (first_name, last_name, dob, gender),
+            dim_prescriber (first_name, last_name, specialty),
+            dim_pharmacy (branch_name, store_number),
+            dim_date (full_date)
+          `)
+          .order('prescription_fact_id', { ascending: false });
+
+        if (error) throw error;
+        prescriptions = data || [];
+        renderPrescriptions(prescriptions);
+        calculateFactMetrics(prescriptions);
+      } catch (err) {
+        console.error("Error loading fact_prescription:", err);
+      }
+    }
+
+    function calculateFactMetrics(data) {
+      document.getElementById('statTotalRx').innerText = data.length;
+    }
+
+    // 3. PREDICTIVE ANALYTICS ENGINE (Linear Regression & Trend Extrapolation)
+    function renderAnalytics() {
+      if (prescriptions.length === 0) {
+        // If empty, show placeholder metrics
+        document.getElementById('statForecastUnits').innerText = "0 units";
+        document.getElementById('statForecastCost').innerText = "₱0.00";
+        return;
+      }
+
+      // Group prescription facts by chronological date
+      const dateMap = {};
+      prescriptions.forEach(p => {
+        const dStr = p.dim_date?.full_date || '2026-10-01';
+        if (!dateMap[dStr]) {
+          dateMap[dStr] = { units: 0, billed: 0, cost: 0, insurance: 0 };
+        }
+        dateMap[dStr].units += Number(p.quantity_dispensed || 0);
+        dateMap[dStr].billed += Number(p.total_amount || 0);
+        dateMap[dStr].cost += Number(p.total_cost || 0);
+        dateMap[dStr].insurance += Number(p.insurance_covered || 0);
+      });
+
+      const sortedDates = Object.keys(dateMap).sort();
+      let xVals = [];
+      let yUnits = [];
+      let yBilled = [];
+
+      sortedDates.forEach((d, idx) => {
+        xVals.push(idx);
+        yUnits.push(dateMap[d].units);
+        yBilled.push(dateMap[d].billed);
+      });
+
+      // Simple Linear Regression algorithm: y = mx + b
+      function linearRegression(x, y) {
+        const n = x.length;
+        if (n <= 1) return { slope: 0, intercept: y[0] || 0 };
+        const sumX = x.reduce((a, b) => a + b, 0);
+        const sumY = y.reduce((a, b) => a + b, 0);
+        const sumXY = x.reduce((acc, curr, i) => acc + (curr * y[i]), 0);
+        const sumXX = x.reduce((acc, curr) => acc + (curr * curr), 0);
+        const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX || 1);
+        const intercept = (sumY - slope * sumX) / n;
+        return { slope, intercept };
+      }
+
+      const unitRegression = linearRegression(xVals, yUnits);
+      const billedRegression = linearRegression(xVals, yBilled);
+
+      // Build 30-day forecast projection
+      const futurePeriods = 3; // Forward points
+      const futureLabels = [...sortedDates];
+      const historicalUnitData = [...yUnits];
+      const forecastedUnitData = new Array(yUnits.length - 1).fill(null);
+      forecastedUnitData.push(yUnits[yUnits.length - 1]); // anchor to last real point
+
+      for (let i = 1; i <= futurePeriods; i++) {
+        const nextX = xVals.length - 1 + i;
+        const nextDate = new Date(sortedDates[sortedDates.length - 1] || new Date());
+        nextDate.setDate(nextDate.getDate() + (i * 10));
+        futureLabels.push(nextDate.toISOString().split('T')[0] + ' (Forecast)');
+        
+        const predictedVal = Math.max(0, Math.round(unitRegression.slope * nextX + unitRegression.intercept));
+        forecastedUnitData.push(predictedVal);
+      }
+
+      // Update KPI Badges with predictions
+      const avgUnits = yUnits.reduce((a, b) => a + b, 0) / (yUnits.length || 1);
+      const projected30DayUnits = Math.round(avgUnits * 30);
+      const avgCostPerUnit = (yBilled.reduce((a, b) => a + b, 0) / (yUnits.reduce((a, b) => a + b, 0) || 1)) || 10;
+      const projected30DayCost = projected30DayUnits * avgCostPerUnit;
+
+      document.getElementById('statForecastUnits').innerText = `~${projected30DayUnits.toLocaleString()} units`;
+      document.getElementById('statForecastCost').innerText = `₱${projected30DayCost.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+
+      // Render Chart 1: Demand & Prediction Line
+      const ctx1 = document.getElementById('demandForecastChart').getContext('2d');
+      if (demandChartInstance) demandChartInstance.destroy();
+      demandChartInstance = new Chart(ctx1, {
+        type: 'line',
+        data: {
+          labels: futureLabels,
+          datasets: [
+            {
+              label: 'Actual Dispensed Units',
+              data: [...historicalUnitData, ...new Array(futurePeriods).fill(null)],
+              borderColor: '#0b2545',
+              backgroundColor: 'rgba(11, 37, 69, 0.1)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 4
+            },
+            {
+              label: 'Regression Projection Trend',
+              data: forecastedUnitData,
+              borderColor: '#f59e0b',
+              borderDash: [6, 6],
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 5
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } } },
+          scales: { x: { min: 0, max: futureLabels.length - 1 }, y: { beginAtZero: true } }
+        }
+      });
+      resetDemandChartZoom();
+
+      // Render Chart 2: Financial Stack
+      const ctx2 = document.getElementById('financialChart').getContext('2d');
+      if (financialChartInstance) financialChartInstance.destroy();
+      financialChartInstance = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: sortedDates,
+          datasets: [
+            {
+              label: 'Patient Out-of-Pocket',
+              data: sortedDates.map(d => dateMap[d].cost),
+              backgroundColor: '#10b981'
+            },
+            {
+              label: 'Insurance Covered',
+              data: sortedDates.map(d => dateMap[d].insurance),
+              backgroundColor: '#f59e0b'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { stacked: true, min: 0, max: sortedDates.length - 1, ticks: { autoSkip: true, maxTicksLimit: 6, maxRotation: 0 } },
+            y: { stacked: true, beginAtZero: true }
+          },
+          plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } } }
+        }
+      });
+      resetFinancialChartZoom();
+
+      // Render Chart 3: Drug Consumption Distribution
+      const drugTotals = {};
+      prescriptions.forEach(p => {
+        const name = p.dim_drug?.drug_name || 'Other';
+        drugTotals[name] = (drugTotals[name] || 0) + Number(p.quantity_dispensed || 0);
+      });
+
+      const topDrugs = Object.entries(drugTotals)
+        .sort(([, unitsA], [, unitsB]) => unitsB - unitsA)
+        .slice(0, 8);
+      const topDrugLabels = topDrugs.length > 0 ? topDrugs.map(([name]) => name) : ['No dispensing data'];
+      const topDrugValues = topDrugs.length > 0 ? topDrugs.map(([, units]) => units) : [0];
+
+      const ctx3 = document.getElementById('drugShareChart').getContext('2d');
+      if (drugShareChartInstance) drugShareChartInstance.destroy();
+      drugShareChartInstance = new Chart(ctx3, {
+        type: 'bar',
+        data: {
+          labels: topDrugLabels,
+          datasets: [{
+            label: 'Units dispensed',
+            data: topDrugValues,
+            backgroundColor: '#0b2545',
+            hoverBackgroundColor: '#f59e0b',
+            borderRadius: 3,
+            barThickness: 18
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          scales: {
+            x: { beginAtZero: true, title: { display: true, text: 'Units dispensed' }, ticks: { precision: 0 } },
+            y: { reverse: true, ticks: { autoSkip: false, font: { size: 10 } } }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: context => `${Number(context.raw).toLocaleString()} units dispensed`
+              }
+            }
+          }
+        }
+      });
+
+      runSurgeSimulation();
+    }
+
+    // 4. Interactive Campus Demand Surge Simulator
+    function populateSimDrugs() {
+      const select = document.getElementById('simDrugSelect');
+      const selectedDrugId = select.value;
+      select.innerHTML = drugs.length
+        ? drugs.map(d => `<option value="${d.drug_id}">${d.drug_name}</option>`).join('')
+        : '<option value="">No medications available</option>';
+      if (drugs.some(drug => String(drug.drug_id) === selectedDrugId)) {
+        select.value = selectedDrugId;
+      }
+      runSurgeSimulation();
+    }
+
+    function setSurgeEmptyState(message) {
+      document.getElementById('simVelocityLabel').innerText = 'N/A';
+      document.getElementById('simBaselineCoverage').innerText = message;
+      document.getElementById('simUnitsNeededLabel').innerText = 'N/A';
+      document.getElementById('simReorderLabel').innerText = 'Enter stock';
+      document.getElementById('simCoverageLabel').innerText = 'Stock coverage unavailable';
+      document.getElementById('simBudgetLabel').innerText = 'N/A';
+      document.getElementById('simScenarioRows').innerHTML = `<tr><td colspan="4" class="p-3 text-center text-slate-400">${message}</td></tr>`;
+      if (simForecastChartInstance) {
+        simForecastChartInstance.destroy();
+        simForecastChartInstance = null;
+      }
+      document.getElementById('simForecastChart').classList.add('hidden');
+      document.getElementById('simForecastMessage').classList.remove('hidden');
+      document.getElementById('simForecastMessage').textContent = message;
+    }
+
+    function renderSurgeForecast(dailyVelocity, surgePct, horizonDays, stockOnHand) {
+      const canvas = document.getElementById('simForecastChart');
+      const message = document.getElementById('simForecastMessage');
+      canvas.classList.remove('hidden');
+      message.classList.add('hidden');
+
+      if (simForecastChartInstance) simForecastChartInstance.destroy();
+
+      const labels = Array.from({ length: horizonDays }, (_, index) => `Day ${index + 1}`);
+      const simulatedVelocity = dailyVelocity * (1 + surgePct);
+      simForecastChartInstance = new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Projected cumulative demand',
+              data: labels.map((_, index) => Number((simulatedVelocity * (index + 1)).toFixed(1))),
+              borderColor: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 11, 0.12)',
+              fill: true,
+              tension: 0.2,
+              pointRadius: 0
+            },
+            {
+              label: 'Stock on hand',
+              data: stockOnHand === null ? labels.map(() => null) : labels.map(() => stockOnHand),
+              borderColor: '#0b2545',
+              borderDash: [5, 4],
+              pointRadius: 0,
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { intersect: false, mode: 'index' },
+          scales: {
+            x: { ticks: { autoSkip: true, maxTicksLimit: 8, maxRotation: 0 } },
+            y: { beginAtZero: true, title: { display: true, text: 'Units' } }
+          },
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } },
+            tooltip: { callbacks: { label: context => `${context.dataset.label}: ${context.raw ?? 'not entered'} units` } }
+          }
+        }
+      });
+    }
+
+    function runSurgeSimulation() {
+      const drugId = Number(document.getElementById('simDrugSelect').value);
+      const surgePct = Number(document.getElementById('simSurgePct').value) / 100;
+      const horizonDays = Number(document.getElementById('simHorizon').value);
+      const baselineSelection = document.getElementById('simBaselineDays').value;
+      const stockInput = document.getElementById('simStockOnHand').value.trim();
+      const stockOnHand = stockInput === '' ? null : Math.max(0, Number(stockInput));
+
+      if (!drugId) {
+        setSurgeEmptyState('Select a medication to run the simulation.');
+        return;
+      }
+
+      const datedMatches = prescriptions
+        .filter(prescription => Number(prescription.drug_id) === drugId)
+        .map(prescription => ({
+          date: Date.parse(`${prescription.dim_date?.full_date || ''}T00:00:00Z`),
+          units: Number(prescription.quantity_dispensed || 0),
+          billed: Number(prescription.total_amount || 0)
+        }))
+        .filter(record => Number.isFinite(record.date));
+
+      if (datedMatches.length === 0) {
+        setSurgeEmptyState('No dated dispense history is available for this medication.');
+        return;
+      }
+
+      const latestDate = datedMatches.reduce((latest, record) => Math.max(latest, record.date), -Infinity);
+      const requestedDays = baselineSelection === 'all' ? Infinity : Number(baselineSelection);
+      const cutoffDate = Number.isFinite(requestedDays)
+        ? latestDate - (requestedDays - 1) * 24 * 60 * 60 * 1000
+        : -Infinity;
+      const baselineRecords = datedMatches.filter(record => record.date >= cutoffDate);
+      const earliestBaselineDate = baselineRecords.reduce((earliest, record) => Math.min(earliest, record.date), Infinity);
+      const baselineDays = Math.max(1, Math.ceil((latestDate - earliestBaselineDate) / (24 * 60 * 60 * 1000)) + 1);
+      const totalUnits = baselineRecords.reduce((sum, record) => sum + record.units, 0);
+      const totalBilled = baselineRecords.reduce((sum, record) => sum + record.billed, 0);
+      const dailyVelocity = totalUnits / baselineDays;
+      const simulatedVelocity = dailyVelocity * (1 + surgePct);
+      const predictedTotalUnits = Math.ceil(simulatedVelocity * horizonDays);
+      const billedValuePerUnit = totalUnits > 0 ? totalBilled / totalUnits : 0;
+      const estimatedBilledValue = predictedTotalUnits * billedValuePerUnit;
+
+      document.getElementById('simVelocityLabel').innerText = `${dailyVelocity.toFixed(2)} units/day`;
+      document.getElementById('simBaselineCoverage').innerText = `Based on ${baselineDays} days of dated history`;
+      document.getElementById('simUnitsNeededLabel').innerText = `${predictedTotalUnits.toLocaleString()} units`;
+      document.getElementById('simBudgetLabel').innerText = `₱${estimatedBilledValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+      if (stockOnHand === null || !Number.isFinite(stockOnHand)) {
+        document.getElementById('simReorderLabel').innerText = 'Enter stock';
+        document.getElementById('simCoverageLabel').innerText = 'Add current stock to estimate coverage';
+      } else {
+        const additionalUnits = Math.max(0, Math.ceil(predictedTotalUnits - stockOnHand));
+        const coverageDays = simulatedVelocity > 0 ? stockOnHand / simulatedVelocity : Infinity;
+        document.getElementById('simReorderLabel').innerText = `${additionalUnits.toLocaleString()} units`;
+        document.getElementById('simCoverageLabel').innerText = Number.isFinite(coverageDays)
+          ? `Stock lasts about ${coverageDays.toFixed(1)} days`
+          : 'No projected demand';
+      }
+
+      const scenarios = [];
+      const addScenario = (rate, label) => {
+        if (!scenarios.some(scenario => scenario.rate === rate)) scenarios.push({ rate, label });
+      };
+      addScenario(0, 'Normal (0%)');
+      addScenario(surgePct, `Selected (+${Math.round(surgePct * 100)}%)`);
+      addScenario(1, 'High (+100%)');
+
+      document.getElementById('simScenarioRows').innerHTML = scenarios.map(scenario => {
+        const scenarioUnits = Math.ceil(dailyVelocity * (1 + scenario.rate) * horizonDays);
+        const additionalUnits = stockOnHand === null ? 'Enter stock' : `${Math.max(0, Math.ceil(scenarioUnits - stockOnHand)).toLocaleString()} units`;
+        const scenarioValue = scenarioUnits * billedValuePerUnit;
+        return `
+          <tr class="border-t border-slate-100">
+            <td class="p-2 font-semibold text-slate-700">${scenario.label}</td>
+            <td class="p-2 text-right">${scenarioUnits.toLocaleString()} units</td>
+            <td class="p-2 text-right">${additionalUnits}</td>
+            <td class="p-2 text-right">₱${scenarioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          </tr>
+        `;
+      }).join('');
+
+      renderSurgeForecast(dailyVelocity, surgePct, horizonDays, stockOnHand);
+    }
+
+    // 5. Prescription Desk Rendering & Filtering
+    function renderPrescriptions(items) {
+      const tbody = document.getElementById('prescriptionTableBody');
+      if (items.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-slate-400">No prescriptions found. Click "Dispense New Prescription" to issue one.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = items.map(rx => {
+        const drug = rx.dim_drug || {};
+        const patient = rx.dim_patient || {};
+        const doc = rx.dim_prescriber || {};
+        const dateStr = rx.dim_date?.full_date || 'N/A';
+
+        return `
+          <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+            <td class="p-3.5 font-mono text-[11px] font-bold text-amber-700">#${rx.prescription_fact_id}</td>
+            <td class="p-3.5 text-slate-500">${dateStr}</td>
+            <td class="p-3.5 font-bold text-slate-800">${patient.first_name || ''} ${patient.last_name || ''}</td>
+            <td class="p-3.5">
+              <span class="font-bold text-slate-800">${drug.drug_name || 'Unknown Drug'}</span>
+              <span class="text-slate-400 block text-[10px]">${drug.dosage_form || ''} ${drug.strength || ''}</span>
+            </td>
+            <td class="p-3.5 text-slate-600">Dr. ${doc.first_name || ''} ${doc.last_name || ''}</td>
+            <td class="p-3.5 text-center font-bold text-slate-700">${rx.quantity_dispensed} <span class="font-normal text-[10px] text-slate-400">(${rx.days_supply}d)</span></td>
+            <td class="p-3.5 text-right font-medium text-slate-800">₱${Number(rx.total_amount || 0).toFixed(2)}</td>
+            <td class="p-3.5 text-right font-bold text-emerald-700">₱${Number(rx.total_cost || 0).toFixed(2)}</td>
+            <td class="p-3.5 text-center">
+              <button onclick='printSlip(${JSON.stringify(rx)})' class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs font-bold transition flex items-center gap-1 mx-auto">
+                <i class="fa-solid fa-print"></i> Slip
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterPrescriptions() {
+      const q = document.getElementById('rxSearchInput').value.toLowerCase();
+      const filtered = prescriptions.filter(rx => {
+        const patName = `${rx.dim_patient?.first_name || ''} ${rx.dim_patient?.last_name || ''}`.toLowerCase();
+        const drugName = (rx.dim_drug?.drug_name || '').toLowerCase();
+        const docName = `${rx.dim_prescriber?.first_name || ''} ${rx.dim_prescriber?.last_name || ''}`.toLowerCase();
+        const rxId = String(rx.prescription_fact_id);
+        return patName.includes(q) || drugName.includes(q) || docName.includes(q) || rxId.includes(q);
+      });
+      renderPrescriptions(filtered);
+    }
+
+    // 6. Dispense Action & Automated dim_date Resolution
+    async function handleDispensePrescription(e) {
+      e.preventDefault();
+
+      const patient_id = parseInt(document.getElementById('dispPatientId').value);
+      const prescriber_id = parseInt(document.getElementById('dispPrescriberId').value);
+      const drug_id = parseInt(document.getElementById('dispDrugId').value);
+      const pharmacy_id = parseInt(document.getElementById('dispPharmacyId').value);
+      const quantity_dispensed = parseInt(document.getElementById('dispQuantity').value);
+      const days_supply = parseInt(document.getElementById('dispDaysSupply').value);
+      const total_amount = parseFloat(document.getElementById('dispTotalAmount').value) || 0;
+      const insurance_covered = parseFloat(document.getElementById('dispInsurance').value) || 0;
+      const total_cost = Math.max(0, total_amount - insurance_covered);
+
+      try {
+        const todayObj = new Date();
+        const todayIso = todayObj.toISOString().split('T')[0];
+
+        let { data: dateRows } = await client.from('dim_date').select('date_id').eq('full_date', todayIso);
+        let date_id;
+
+        if (dateRows && dateRows.length > 0) {
+          date_id = dateRows[0].date_id;
+        } else {
+          const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+          const { data: insertedDate, error: dateErr } = await client.from('dim_date').insert([{
+            full_date: todayIso,
+            day_of_week: daysOfWeek[todayObj.getDay()],
+            month: todayObj.getMonth() + 1,
+            quarter: Math.floor(todayObj.getMonth() / 3) + 1,
+            year: todayObj.getFullYear()
+          }]).select('date_id').single();
+
+          if (dateErr) throw dateErr;
+          date_id = insertedDate.date_id;
+        }
+
+        const { error: factErr } = await client.from('fact_prescription').insert([{
+          pharmacy_id,
+          prescriber_id,
+          drug_id,
+          patient_id,
+          date_id,
+          quantity_dispensed,
+          days_supply,
+          total_amount,
+          insurance_covered,
+          total_cost
+        }]);
+
+        if (factErr) throw factErr;
+
+        closeModal('dispenseModal');
+        Swal.fire('Dispensed Successfully', 'Fact table updated.', 'success');
+        await loadPrescriptions();
+        renderAnalytics();
+      } catch (err) {
+        Swal.fire('Dispense Failed', err.message, 'error');
+      }
+    }
+
+    function calcCost() {
+      const amt = parseFloat(document.getElementById('dispTotalAmount').value) || 0;
+      const ins = parseFloat(document.getElementById('dispInsurance').value) || 0;
+      const cost = Math.max(0, amt - ins);
+      document.getElementById('dispTotalCostPreview').innerText = `₱${cost.toFixed(2)}`;
+    }
+
+    // 7. Dimension Handlers
+    function populateDropdowns() {
+      const patSel = document.getElementById('dispPatientId');
+      patSel.innerHTML = '<option value="">-- Choose Patient --</option>' + 
+        patients.map(p => `<option value="${p.patient_id}">${p.last_name || ''}, ${p.first_name || ''} (ID: ${p.patient_id})</option>`).join('');
+
+      const docSel = document.getElementById('dispPrescriberId');
+      docSel.innerHTML = '<option value="">-- Choose Prescriber --</option>' + 
+        prescribers.map(d => `<option value="${d.prescriber_id}">Dr. ${d.first_name || ''} ${d.last_name || ''} - ${d.specialty || 'General'}</option>`).join('');
+
+      const drugSel = document.getElementById('dispDrugId');
+      drugSel.innerHTML = '<option value="">-- Choose Medication --</option>' + 
+        drugs.map(g => `<option value="${g.drug_id}">${g.drug_name} (${g.dosage_form || ''} ${g.strength || ''})</option>`).join('');
+
+      const pharmSel = document.getElementById('dispPharmacyId');
+      pharmSel.innerHTML = '<option value="">-- Choose Branch --</option>' + 
+        pharmacies.map(ph => `<option value="${ph.pharmacy_id}">${ph.branch_name} (${ph.store_number})</option>`).join('');
+
+      if (pharmacies.length > 0) pharmSel.selectedIndex = 1;
+    }
+
+    function renderDrugTable(items) {
+      document.getElementById('drugTableBody').innerHTML = items.map(d => `
+        <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+          <td class="p-3.5 font-mono text-slate-500">${d.drug_id}</td>
+          <td class="p-3.5 font-bold text-slate-800">${d.drug_name}</td>
+          <td class="p-3.5 text-slate-600">${d.brand_name || '-'}</td>
+          <td class="p-3.5 text-slate-600">${d.generic_name || '-'}</td>
+          <td class="p-3.5"><span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px]">${d.dosage_form || 'N/A'}</span></td>
+          <td class="p-3.5 text-slate-600 font-semibold">${d.strength || '-'}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderPatientTable(items) {
+      document.getElementById('patientTableBody').innerHTML = items.map(p => `
+        <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+          <td class="p-3.5 font-mono text-slate-500">${p.patient_id}</td>
+          <td class="p-3.5 font-bold text-slate-800">${p.first_name || ''} ${p.last_name || ''}</td>
+          <td class="p-3.5 text-slate-500">${p.dob || 'N/A'}</td>
+          <td class="p-3.5"><span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-[10px] font-bold">${p.gender || '-'}</span></td>
+          <td class="p-3.5 text-slate-600">${p.address || '-'}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderPrescriberTable(items) {
+      document.getElementById('prescriberTableBody').innerHTML = items.map(d => `
+        <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+          <td class="p-3.5 font-mono text-slate-500">${d.prescriber_id}</td>
+          <td class="p-3.5 font-bold text-slate-800">Dr. ${d.first_name || ''} ${d.last_name || ''}</td>
+          <td class="p-3.5 font-mono text-slate-600">${d.npi_number}</td>
+          <td class="p-3.5"><span class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold">${d.specialty || 'General Practitioner'}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    // Modal Helpers
+    function openDispenseModal() { document.getElementById('dispenseForm').reset(); calcCost(); document.getElementById('dispenseModal').classList.remove('hidden'); }
+    function openAddDrugModal() { document.getElementById('addDrugModal').classList.remove('hidden'); }
+    function openAddPatientModal() { document.getElementById('addPatientModal').classList.remove('hidden'); }
+    function openAddPrescriberModal() { document.getElementById('addPrescriberModal').classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    async function handleCreateDrug(e) {
+      e.preventDefault();
+      const payload = {
+        drug_name: document.getElementById('drugName').value.trim(),
+        brand_name: document.getElementById('drugBrand').value.trim(),
+        generic_name: document.getElementById('drugGeneric').value.trim(),
+        dosage_form: document.getElementById('drugForm').value.trim(),
+        strength: document.getElementById('drugStrength').value.trim()
+      };
+      const { error } = await client.from('dim_drug').insert([payload]);
+      if (error) return Swal.fire('Error', error.message, 'error');
+      closeModal('addDrugModal');
+      await loadDimensions();
+      Swal.fire('Drug Registered', '', 'success');
+    }
+
+    async function handleCreatePatient(e) {
+      e.preventDefault();
+      const payload = {
+        first_name: document.getElementById('patFirstName').value.trim(),
+        last_name: document.getElementById('patLastName').value.trim(),
+        dob: document.getElementById('patDob').value || null,
+        gender: document.getElementById('patGender').value,
+        address: document.getElementById('patAddress').value.trim()
+      };
+      const { error } = await client.from('dim_patient').insert([payload]);
+      if (error) return Swal.fire('Error', error.message, 'error');
+      closeModal('addPatientModal');
+      await loadDimensions();
+      Swal.fire('Patient Registered', '', 'success');
+    }
+
+    async function handleCreatePrescriber(e) {
+      e.preventDefault();
+      const payload = {
+        npi_number: parseInt(document.getElementById('docNpi').value),
+        first_name: document.getElementById('docFirstName').value.trim(),
+        last_name: document.getElementById('docLastName').value.trim(),
+        specialty: document.getElementById('docSpecialty').value.trim()
+      };
+      const { error } = await client.from('dim_prescriber').insert([payload]);
+      if (error) return Swal.fire('Error', error.message, 'error');
+      closeModal('addPrescriberModal');
+      await loadDimensions();
+      Swal.fire('Prescriber Registered', '', 'success');
+    }
+
+    // 8. Tab Switcher
+    function switchTab(tab) {
+      ['analytics', 'prescriptions', 'drugs', 'patients', 'prescribers'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.add('hidden');
+        document.getElementById(`btn-tab-${t}`).classList.remove('bg-amber-500', 'text-slate-900', 'font-bold');
+        document.getElementById(`btn-tab-${t}`).classList.add('text-slate-300');
+      });
+
+      document.getElementById(`tab-${tab}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`btn-tab-${tab}`);
+      activeBtn.classList.remove('text-slate-300');
+      activeBtn.classList.add('bg-amber-500', 'text-slate-900', 'font-bold');
+
+      if (tab === 'analytics') {
+        renderAnalytics();
+      }
+    }
+  </script>
+</body>
+</html>
