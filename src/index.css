@@ -38,12 +38,12 @@
   color-scheme: dark;
   --app-primary: #4f46e5;
   --app-primary-hover: #4338ca;
-  --app-background: #0f172a;
-  --app-surface: #111827;
-  --app-border: #334155;
-  --app-text: #e2e8f0;
-  --app-text-secondary: #94a3b8;
-  --app-focus: #a5b4fc;
+  --app-background: #080e19;
+  --app-surface: #101a29;
+  --app-border: #253247;
+  --app-text: #e7edf7;
+  --app-text-secondary: #97a8bf;
+  --app-focus: #5eead4;
 }
 
 :root[data-theme='dark'] body,
@@ -101,8 +101,8 @@
 }
 
 :root[data-theme='dark'] .simulator-chart-panel {
-  background-color: #0f172a;
-  border-color: #334155;
+  background-color: #101a29;
+  border-color: #253247;
 }
 
 .primary-action {
@@ -125,8 +125,9 @@
 }
 
 :root[data-theme='dark'] .tab-btn[aria-current='page'] {
-  background-color: #4f46e5;
-  color: #fff;
+  background-color: #142638;
+  color: #e7edf7;
+  box-shadow: inset 0 0 0 1px #294359;
 }
 
 :root[data-theme='dark'] input,
@@ -149,6 +150,396 @@
 :root[data-theme='dark'] .text-amber-600,
 :root[data-theme='dark'] .text-amber-700 {
   color: #fbbf24;
+}
+
+.app-header {
+  background: #080f1c;
+  border-color: #1b2a3d;
+}
+
+.brand-mark {
+  background: linear-gradient(145deg, #15364a, #102436);
+  color: #5eead4;
+  border: 1px solid #285064;
+}
+
+.nav-divider {
+  border-color: #2a384a;
+}
+
+.analytics-tab {
+  color: #c4d7e8;
+  background: linear-gradient(110deg, #102833, #101a29);
+  border: 1px solid #315263;
+  box-shadow: inset 0 0 0 1px rgb(94 234 212 / 5%);
+}
+
+.analytics-tab:hover {
+  color: #e7edf7;
+  background: #142638;
+  border-color: #396175;
+}
+
+.analytics-tab.is-active {
+  color: #d7fffa;
+  background: linear-gradient(110deg, #12343a, #142638);
+  border-color: #2b827c;
+  box-shadow: 0 0 18px rgb(45 212 191 / 12%), inset 0 0 0 1px rgb(94 234 212 / 8%);
+}
+
+.analytics-badge {
+  align-items: center;
+  border: 1px solid rgb(94 234 212 / 32%);
+  border-radius: 999px;
+  color: #5eead4;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  padding: 4px 6px;
+  box-shadow: 0 0 12px rgb(45 212 191 / 14%);
+}
+
+.kpi-bar {
+  border-color: var(--app-border);
+}
+
+.prescription-search-input {
+  min-height: 48px;
+}
+
+.prescription-table-panel {
+  border-color: var(--app-border);
+}
+
+.prescription-table th,
+.prescription-table td {
+  white-space: nowrap;
+}
+
+.prescription-table th {
+  padding: 15px 16px;
+  letter-spacing: 0.06em;
+}
+
+.prescription-table-row {
+  transition: background-color 140ms ease, box-shadow 140ms ease;
+}
+
+.app-footer {
+  background-color: var(--app-surface);
+  border-color: var(--app-border);
+}
+
+:root[data-theme='dark'] .kpi-bar {
+  background-color: #0b1422;
+}
+
+:root[data-theme='dark'] .kpi-card {
+  background-color: #101a29;
+  border-color: #253247;
+}
+
+:root[data-theme='dark'] .kpi-icon-blue {
+  background-color: #102b3a;
+  color: #67d9f4;
+}
+
+:root[data-theme='dark'] .kpi-icon-amber {
+  background-color: #342b18;
+  color: #fbbf24;
+}
+
+:root[data-theme='dark'] .kpi-icon-emerald {
+  background-color: #12312c;
+  color: #5eead4;
+}
+
+:root[data-theme='dark'] .kpi-icon-purple {
+  background-color: #29213d;
+  color: #c4b5fd;
+}
+
+:root[data-theme='dark'] .kpi-card .text-blue-700 {
+  color: #67d9f4;
+}
+
+:root[data-theme='dark'] .kpi-card .text-emerald-700 {
+  color: #5eead4;
+}
+
+:root[data-theme='dark'] .kpi-card .text-purple-700 {
+  color: #c4b5fd;
+}
+
+:root[data-theme='dark'] .analytics-tab {
+  background: linear-gradient(110deg, #102833, #101a29);
+  border-color: #315263;
+}
+
+:root[data-theme='dark'] .prescription-desk h2,
+:root[data-theme='dark'] .prescription-table .text-slate-800 {
+  color: #edf4ff;
+}
+
+:root[data-theme='dark'] .prescription-search-input {
+  background-color: #0d1725;
+  border-color: #314259;
+  color: #edf4ff;
+}
+
+:root[data-theme='dark'] .prescription-search-input:focus {
+  border-color: #5eead4;
+  box-shadow: 0 0 0 3px rgb(94 234 212 / 14%);
+}
+
+:root[data-theme='dark'] .prescription-table-panel {
+  background-color: #101a29;
+}
+
+:root[data-theme='dark'] .prescription-table-head {
+  background-color: #152235;
+  color: #b6c7d9;
+  border-color: #2a3a50;
+}
+
+:root[data-theme='dark'] .prescription-table-row {
+  background-color: #101a29;
+  border-color: #253247;
+}
+
+:root[data-theme='dark'] .prescription-table-row:hover {
+  background-color: #152638;
+  box-shadow: inset 2px 0 #5eead4;
+}
+
+:root[data-theme='dark'] .prescription-table .text-emerald-700 {
+  color: #5eead4;
+}
+
+:root[data-theme='dark'] .prescription-slip-button {
+  background-color: #1a2a3d;
+  color: #cfdae8;
+}
+
+:root[data-theme='dark'] .prescription-slip-button:hover {
+  background-color: #263a50;
+}
+
+:root[data-theme='dark'] .app-footer {
+  background-color: #0b1422;
+}
+
+:root:not([data-theme='dark']) {
+  --app-primary: #0f766e;
+  --app-primary-hover: #115e59;
+  --app-background: #f3f8fa;
+  --app-surface: #ffffff;
+  --app-border: #d7e3e8;
+  --app-text: #172b3a;
+  --app-text-secondary: #5c7180;
+  --app-focus: #0f766e;
+}
+
+:root:not([data-theme='dark']) body,
+:root:not([data-theme='dark']) #root > div {
+  background-color: var(--app-background);
+  color: var(--app-text);
+}
+
+:root:not([data-theme='dark']) .app-header {
+  background: #ffffff;
+  border-color: #d7e3e8;
+  color: #172b3a;
+  box-shadow: 0 4px 16px rgb(15 40 56 / 5%);
+}
+
+:root:not([data-theme='dark']) .brand-mark {
+  background: linear-gradient(145deg, #d9f5f1, #edf9f7);
+  color: #0f766e;
+  border-color: #b7e5df;
+  box-shadow: 0 4px 12px rgb(15 118 110 / 10%);
+}
+
+:root:not([data-theme='dark']) .app-header h1 {
+  color: #142b3a;
+}
+
+:root:not([data-theme='dark']) .app-header h1 span {
+  background: #e2f5f2;
+  color: #0f766e;
+}
+
+:root:not([data-theme='dark']) .app-header p {
+  color: #617786;
+}
+
+:root:not([data-theme='dark']) .app-header nav .tab-btn {
+  color: #526978;
+}
+
+:root:not([data-theme='dark']) .app-header nav .tab-btn:hover {
+  background: #f0f7f8;
+  color: #163747;
+}
+
+:root:not([data-theme='dark']) .app-header nav .tab-btn[aria-current='page'] {
+  background: #e0f3f1;
+  color: #0f5d58;
+  box-shadow: inset 0 0 0 1px #b8e3dd;
+}
+
+:root:not([data-theme='dark']) .nav-divider {
+  border-color: #dbe6ea;
+}
+
+:root:not([data-theme='dark']) .app-header-control {
+  background: #f5f9fa;
+  border-color: #d9e5e9;
+  color: #355162;
+}
+
+:root:not([data-theme='dark']) .app-header-control:hover {
+  background: #eaf3f5;
+  border-color: #bdd2da;
+  color: #173c4d;
+}
+
+:root:not([data-theme='dark']) .app-header-control svg.text-amber-400 {
+  color: #0f766e;
+}
+
+:root:not([data-theme='dark']) .app-header-control[aria-expanded='true'] {
+  background: #dff3f0;
+  border-color: #a4d8d1;
+  color: #0f5d58;
+}
+
+:root:not([data-theme='dark']) .analytics-tab {
+  background: linear-gradient(110deg, #eaf7f5, #f3f8fa);
+  border-color: #b8dcd9;
+  color: #17635f;
+  box-shadow: inset 0 0 0 1px rgb(15 118 110 / 4%);
+}
+
+:root:not([data-theme='dark']) .analytics-tab:hover {
+  background: #e1f3f0;
+  border-color: #8bcac1;
+  color: #0b5551;
+}
+
+:root:not([data-theme='dark']) .analytics-tab.is-active {
+  background: linear-gradient(110deg, #d7f0ec, #e8f6f4);
+  border-color: #7bc2b9;
+  color: #0b5551;
+  box-shadow: 0 4px 14px rgb(15 118 110 / 10%), inset 0 0 0 1px rgb(15 118 110 / 7%);
+}
+
+:root:not([data-theme='dark']) .analytics-badge {
+  border-color: #9acfc8;
+  color: #0f766e;
+  background: #f3fbf9;
+  box-shadow: none;
+}
+
+:root:not([data-theme='dark']) .kpi-bar {
+  background: #f7fbfc;
+  border-color: #dce8ec;
+}
+
+:root:not([data-theme='dark']) .kpi-card {
+  background: #ffffff;
+  border: 1px solid #e1ebee;
+  box-shadow: 0 2px 8px rgb(16 42 57 / 3%);
+}
+
+:root:not([data-theme='dark']) .kpi-card .text-slate-800 {
+  color: #183143;
+}
+
+:root:not([data-theme='dark']) .kpi-icon-blue {
+  background: #e5f6fb;
+  color: #087c9d;
+}
+
+:root:not([data-theme='dark']) .kpi-icon-amber {
+  background: #fff6df;
+  color: #a96508;
+}
+
+:root:not([data-theme='dark']) .kpi-icon-emerald {
+  background: #e3f7f1;
+  color: #087b67;
+}
+
+:root:not([data-theme='dark']) .kpi-icon-purple {
+  background: #f0ebff;
+  color: #6941a5;
+}
+
+:root:not([data-theme='dark']) .kpi-card .text-emerald-700 {
+  color: #087b67;
+}
+
+:root:not([data-theme='dark']) .kpi-card .text-purple-700 {
+  color: #6941a5;
+}
+
+:root:not([data-theme='dark']) .prescription-desk h2,
+:root:not([data-theme='dark']) .prescription-table .text-slate-800 {
+  color: #172f40;
+}
+
+:root:not([data-theme='dark']) .prescription-search-input {
+  background-color: #ffffff;
+  border-color: #cbdbe1;
+  color: #172f40;
+  box-shadow: 0 4px 14px rgb(16 42 57 / 4%);
+}
+
+:root:not([data-theme='dark']) .prescription-search-input:focus {
+  border-color: #0f8b80;
+  box-shadow: 0 0 0 3px rgb(15 139 128 / 13%);
+}
+
+:root:not([data-theme='dark']) .prescription-table-panel {
+  background: #ffffff;
+  border-color: #d7e3e8;
+  box-shadow: 0 8px 26px rgb(16 42 57 / 5%);
+}
+
+:root:not([data-theme='dark']) .prescription-table-head {
+  background: #f0f6f8;
+  color: #4b6473;
+  border-color: #d9e5e9;
+}
+
+:root:not([data-theme='dark']) .prescription-table-row {
+  background-color: #ffffff;
+  border-color: #e8eff2;
+}
+
+:root:not([data-theme='dark']) .prescription-table-row:hover {
+  background-color: #f3faf9;
+  box-shadow: inset 2px 0 #0f9b8e;
+}
+
+:root:not([data-theme='dark']) .prescription-table .text-emerald-700 {
+  color: #087b67;
+}
+
+:root:not([data-theme='dark']) .prescription-slip-button {
+  background-color: #edf4f6;
+  color: #355364;
+}
+
+:root:not([data-theme='dark']) .prescription-slip-button:hover {
+  background-color: #dfecef;
+}
+
+:root:not([data-theme='dark']) .app-footer {
+  background-color: #ffffff;
+  border-color: #d7e3e8;
 }
 
 :root[data-theme='dark'] #printableSlip input,

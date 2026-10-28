@@ -28,7 +28,7 @@ import { PrintableSlip } from './components/PrintableSlip';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<TabType>('analytics');
+  const [activeTab, setActiveTab] = useState<TabType>('prescriptions');
   const [drugs, setDrugs] = useState<DimDrug[]>([]);
   const [patients, setPatients] = useState<DimPatient[]>([]);
   const [prescribers, setPrescribers] = useState<DimPrescriber[]>([]);
@@ -37,7 +37,11 @@ export default function App() {
   const [dataSource, setDataSource] = useState<'supabase' | 'cache'>('cache');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDarkMode, setIsDarkMode] = useState(
-    () => window.localStorage.getItem('bupc-theme') === 'dark'
+    () => {
+      const savedTheme = window.localStorage.getItem('pharmapulse-theme')
+        ?? window.localStorage.getItem('bupc-theme');
+      return savedTheme ? savedTheme === 'dark' : true;
+    }
   );
 
   // Modals
@@ -91,7 +95,7 @@ export default function App() {
   useEffect(() => {
     const theme = isDarkMode ? 'dark' : 'light';
     document.documentElement.dataset.theme = theme;
-    window.localStorage.setItem('bupc-theme', theme);
+    window.localStorage.setItem('pharmapulse-theme', theme);
   }, [isDarkMode]);
 
   // Handlers for dimension creation
@@ -242,7 +246,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white py-4 mt-auto">
+      <footer className="app-footer border-t border-slate-200 bg-white py-4 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-2">
           <p>PharmaPulse Analytics • Real-time pharmacy insights</p>
           <div className="flex items-center gap-4">
