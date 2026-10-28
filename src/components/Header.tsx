@@ -44,12 +44,12 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
           <div className="min-w-0">
             <h1 className="font-extrabold text-[11px] sm:text-base tracking-wide uppercase text-white flex items-center gap-2">
-              PHARMACY OPERATIONS
+              PHARMAPULSE
               <span className="hidden sm:inline bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">
                 ANALYTICS
               </span>
             </h1>
-            <p className="hidden sm:block text-xs text-slate-300">Prescription Management &amp; Inventory Planning</p>
+            <p className="hidden sm:block text-xs text-slate-300">Real-time pharmacy insights</p>
           </div>
         </div>
 

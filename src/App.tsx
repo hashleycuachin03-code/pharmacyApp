@@ -244,7 +244,7 @@ export default function App() {
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white py-4 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-2">
-          <p>Pharmacy Operations &amp; Analytics • Prescription Management &amp; Inventory Planning</p>
+          <p>PharmaPulse Analytics • Real-time pharmacy insights</p>
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5">
               <span className={`w-2 h-2 rounded-full ${dataSource === 'supabase' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>

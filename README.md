@@ -1,11 +1,11 @@
-# Pharmacy Operations & Analytics
-> *Prescription management, demand forecasting, and inventory planning*
+# PharmaPulse Analytics
+> *Real-time pharmacy insights for prescription management, demand forecasting, and inventory planning*
 
 ---
 
 ## Overview
 
-**Pharmacy Operations & Analytics** is a reusable pharmacy management and decision-support application for pharmacies, clinics, and healthcare organizations. It combines prescription dispensing, medication and patient directories, analytics, and inventory demand forecasting. Configure it for your organization by connecting your own Supabase project and pharmacy data.
+**PharmaPulse Analytics** is a reusable pharmacy management and decision-support application for pharmacies, clinics, and healthcare organizations. It combines prescription dispensing, medication and patient directories, analytics, and inventory demand forecasting. Configure it for your organization by connecting your own Supabase project and pharmacy data.
 
 ---
 
@@ -93,7 +93,7 @@ Built on a standard dimensional data modeling framework:
 1. **Clone the repository**:
    ```bash
    git clone <repository-url>
-   cd pharmacy-operations-analytics
+   cd pharmapulse-analytics
    ```
 
 2. **Install project dependencies**:

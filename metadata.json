@@ -1,6 +1,6 @@
 {
-  "name": "Pharmacy Operations & Analytics",
-  "description": "A pharmacy operations platform for prescription management, medication directories, demand forecasting, and inventory planning.",
+  "name": "PharmaPulse Analytics",
+  "description": "Real-time pharmacy insights for prescription management, medication demand, and inventory planning.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
