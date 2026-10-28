@@ -62,10 +62,8 @@ export const Header: React.FC<HeaderProps> = ({
             aria-expanded={activeTab === 'explore'}
             aria-controls="main-content"
             title="Ask & Explore"
-            className={`app-header-control flex h-9 w-9 items-center justify-center rounded-lg border transition ${
-              activeTab === 'explore'
-                ? 'bg-indigo-600 text-white border-indigo-400'
-                : 'bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border-slate-700'
+            className={`app-header-control search-toggle flex h-9 w-9 items-center justify-center rounded-lg border transition ${
+              activeTab === 'explore' ? 'is-active' : ''
             }`}
           >
             <Search className="w-4 h-4" />

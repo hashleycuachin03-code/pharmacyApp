@@ -408,8 +408,8 @@ export const PharmacyExplorer: React.FC<PharmacyExplorerProps> = ({
         datasets: [{
           label: result.datasetLabel,
           data: result.values,
-          backgroundColor: isDarkMode ? '#818cf8' : '#4f46e5',
-          borderRadius: 4,
+          backgroundColor: isDarkMode ? '#5eead4' : '#0f766e',
+          borderRadius: 6,
           maxBarThickness: 36,
         }],
       },
@@ -478,11 +478,11 @@ export const PharmacyExplorer: React.FC<PharmacyExplorerProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      <section className="bg-white rounded-xl border border-slate-200 shadow-xs p-5 sm:p-6 space-y-4">
+    <div className="pharmacy-explorer space-y-6">
+      <section className="explorer-search-panel bg-white rounded-xl border border-slate-200 shadow-xs p-5 sm:p-6 space-y-4">
         <div>
           <h2 className="text-2xl font-extrabold text-slate-800 flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-indigo-600" />
+            <Sparkles className="explorer-heading-icon w-5 h-5 text-indigo-600" />
             Ask &amp; Explore
           </h2>
           <p className="text-sm text-slate-500 mt-1">
@@ -490,7 +490,7 @@ export const PharmacyExplorer: React.FC<PharmacyExplorerProps> = ({
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
+        <form onSubmit={handleSubmit} className="explorer-search-form flex flex-col sm:flex-row gap-2">
           <label htmlFor="pharmacy-question" className="sr-only">Search or ask about pharmacy records</label>
           <input
             id="pharmacy-question"
@@ -498,15 +498,15 @@ export const PharmacyExplorer: React.FC<PharmacyExplorerProps> = ({
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
             placeholder="Ask a question, e.g. prescriptions for 2023 by William Hernandez"
-            className="min-w-0 flex-1 border border-slate-300 rounded-lg px-3 py-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="explorer-search-input min-w-0 flex-1 border border-slate-300 rounded-xl px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
           />
-          <button type="submit" className="primary-action rounded-lg px-4 py-2.5 text-sm font-bold inline-flex items-center justify-center gap-2">
+          <button type="submit" className="explorer-submit primary-action rounded-xl px-5 py-3 text-sm font-bold inline-flex items-center justify-center gap-2 transition active:scale-[0.98]">
             <Search className="w-4 h-4" />
             Search
           </button>
         </form>
 
-        <div className="flex flex-wrap gap-2" aria-label="Example questions">
+        <div className="explorer-examples flex flex-wrap gap-2" aria-label="Example questions">
           {[
             'Top medications',
             'Monthly units dispensed',
@@ -519,7 +519,7 @@ export const PharmacyExplorer: React.FC<PharmacyExplorerProps> = ({
               key={example}
               type="button"
               onClick={() => askExample(example)}
-              className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100"
+              className="explorer-example rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
             >
               {example}
             </button>
@@ -527,10 +527,10 @@ export const PharmacyExplorer: React.FC<PharmacyExplorerProps> = ({
         </div>
       </section>
 
-      <section aria-live="polite" aria-atomic="true" className="bg-white rounded-xl border border-slate-200 shadow-xs p-5 sm:p-6 min-h-64">
+      <section aria-live="polite" aria-atomic="true" className="explorer-results bg-white rounded-xl border border-slate-200 shadow-xs p-5 sm:p-6 min-h-64">
         {!result ? (
-          <div className="min-h-52 flex flex-col items-center justify-center text-center text-slate-500">
-            <BarChart3 className="w-8 h-8 text-indigo-500 mb-3" />
+          <div className="explorer-empty min-h-52 flex flex-col items-center justify-center text-center text-slate-500">
+            <BarChart3 className="explorer-empty-icon w-8 h-8 text-indigo-500 mb-3" />
             <h3 className="font-bold text-slate-700">Your results will appear here</h3>
             <p className="text-sm mt-1">Ask about totals, trends, top medications, or search for a record.</p>
           </div>
@@ -542,14 +542,14 @@ export const PharmacyExplorer: React.FC<PharmacyExplorerProps> = ({
             </div>
 
             {result.type === 'summary' && (
-              <div className="rounded-xl bg-indigo-50 border border-indigo-100 p-5">
+              <div className="explorer-metric rounded-xl bg-indigo-50 border border-indigo-100 p-5">
                 <p className="text-sm font-semibold text-indigo-800">{result.title}</p>
                 <p className="text-3xl font-extrabold text-indigo-700 mt-1">{result.value}</p>
               </div>
             )}
 
             {result.type === 'chart' && (
-              <div className="h-80 relative">
+              <div className="explorer-chart h-80 relative">
                 <canvas ref={chartCanvasRef} role="img" aria-label={`${result.title} bar chart`}></canvas>
               </div>
             )}
@@ -557,7 +557,7 @@ export const PharmacyExplorer: React.FC<PharmacyExplorerProps> = ({
             {result.type === 'records' && result.totals && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {result.totals.map((total) => (
-                  <div key={total.label} className="rounded-xl bg-indigo-50 border border-indigo-100 p-4">
+                  <div key={total.label} className="explorer-metric rounded-xl bg-indigo-50 border border-indigo-100 p-4">
                     <p className="text-sm font-semibold text-indigo-800">{total.label}</p>
                     <p className="text-2xl font-extrabold text-indigo-700 mt-1">{total.value}</p>
                   </div>
@@ -566,9 +566,9 @@ export const PharmacyExplorer: React.FC<PharmacyExplorerProps> = ({
             )}
 
             {result.type === 'records' && result.showPrescriptionRecords && result.prescriptions.length > 0 && (
-              <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                <table className="w-full text-left text-xs text-slate-600">
-                  <thead className="bg-slate-100 text-slate-700 uppercase font-bold">
+              <div className="explorer-table-wrap overflow-x-auto border border-slate-200 rounded-lg">
+                <table className="explorer-table w-full text-left text-xs text-slate-600">
+                  <thead className="explorer-table-head bg-slate-100 text-slate-700 uppercase font-bold">
                     <tr>
                       <th scope="col" className="p-3">Rx ID</th>
                       <th scope="col" className="p-3">Date</th>
@@ -583,8 +583,8 @@ export const PharmacyExplorer: React.FC<PharmacyExplorerProps> = ({
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {result.prescriptions.map((prescription) => (
-                      <tr key={prescription.prescription_fact_id} className="hover:bg-slate-50">
-                        <td className="p-3 font-mono">#{prescription.prescription_fact_id}</td>
+                      <tr key={prescription.prescription_fact_id} className="explorer-table-row hover:bg-slate-50">
+                        <td className="p-3 font-mono text-teal-700">#{prescription.prescription_fact_id}</td>
                         <td className="p-3 whitespace-nowrap">{prescription.dim_date?.full_date || '—'}</td>
                         <td className="p-3 whitespace-nowrap">
                           {prescription.dim_pharmacy?.branch_name || '—'}
@@ -604,9 +604,9 @@ export const PharmacyExplorer: React.FC<PharmacyExplorerProps> = ({
             )}
 
             {result.type === 'records' && result.drugs.length > 0 && (
-              <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                <table className="w-full text-left text-xs text-slate-600">
-                  <thead className="bg-slate-100 text-slate-700 uppercase font-bold">
+              <div className="explorer-table-wrap overflow-x-auto border border-slate-200 rounded-lg">
+                <table className="explorer-table w-full text-left text-xs text-slate-600">
+                  <thead className="explorer-table-head bg-slate-100 text-slate-700 uppercase font-bold">
                     <tr>
                       <th scope="col" className="p-3">Medication</th>
                       <th scope="col" className="p-3">Brand</th>
@@ -617,7 +617,7 @@ export const PharmacyExplorer: React.FC<PharmacyExplorerProps> = ({
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {result.drugs.map((drug) => (
-                      <tr key={drug.drug_id}>
+                      <tr key={drug.drug_id} className="explorer-table-row">
                         <td className="p-3 font-semibold text-slate-800">{drug.drug_name}</td>
                         <td className="p-3">{drug.brand_name || '—'}</td>
                         <td className="p-3">{drug.generic_name || '—'}</td>
@@ -631,9 +631,9 @@ export const PharmacyExplorer: React.FC<PharmacyExplorerProps> = ({
             )}
 
             {result.type === 'records' && !result.showPrescriptionRecords && result.prescribers.length > 0 && (
-              <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                <table className="w-full text-left text-xs text-slate-600">
-                  <thead className="bg-slate-100 text-slate-700 uppercase font-bold">
+              <div className="explorer-table-wrap overflow-x-auto border border-slate-200 rounded-lg">
+                <table className="explorer-table w-full text-left text-xs text-slate-600">
+                  <thead className="explorer-table-head bg-slate-100 text-slate-700 uppercase font-bold">
                     <tr>
                       <th scope="col" className="p-3">Prescriber</th>
                       <th scope="col" className="p-3">Specialty</th>
@@ -642,7 +642,7 @@ export const PharmacyExplorer: React.FC<PharmacyExplorerProps> = ({
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {result.prescribers.map((prescriber) => (
-                      <tr key={prescriber.prescriber_id}>
+                      <tr key={prescriber.prescriber_id} className="explorer-table-row">
                         <td className="p-3 font-semibold text-slate-800">{`${prescriber.first_name || ''} ${prescriber.last_name || ''}`.trim() || 'Unknown prescriber'}</td>
                         <td className="p-3">{prescriber.specialty || '—'}</td>
                         <td className="p-3">{prescriber.npi_number}</td>
@@ -654,7 +654,7 @@ export const PharmacyExplorer: React.FC<PharmacyExplorerProps> = ({
             )}
 
             {result.type === 'empty' && (
-              <p className="rounded-lg bg-slate-50 p-4 text-sm text-slate-600">{result.description}</p>
+              <p className="explorer-empty rounded-lg bg-slate-50 p-4 text-sm text-slate-600">{result.description}</p>
             )}
           </div>
         )}
