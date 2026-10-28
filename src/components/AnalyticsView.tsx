@@ -16,9 +16,12 @@ import { FactPrescription, DimDrug } from '../types/pharmacy';
 
 ChartJS.register(...registerables);
 
+const DEFAULT_VISIBLE_DATES = 7;
+
 interface AnalyticsViewProps {
   prescriptions: FactPrescription[];
   drugs: DimDrug[];
+  isDarkMode: boolean;
   onRefresh: () => void;
   onUpdateMetrics: (units: number, cost: number) => void;
 }
@@ -26,6 +29,7 @@ interface AnalyticsViewProps {
 export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   prescriptions,
   drugs,
+  isDarkMode,
   onRefresh,
   onUpdateMetrics,
 }) => {
@@ -210,6 +214,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
   // Render main analytics charts
   useEffect(() => {
+    ChartJS.defaults.color = isDarkMode ? '#cbd5e1' : '#475569';
+    ChartJS.defaults.borderColor = isDarkMode ? '#334155' : '#e2e8f0';
+
     if (prescriptions.length === 0) {
       onUpdateMetrics(0, 0);
       return;
@@ -265,6 +272,14 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     const projected30DayCost = projected30DayUnits * avgCostPerUnit;
 
     onUpdateMetrics(projected30DayUnits, projected30DayCost);
+    const demandMax = futureLabels.length - 1;
+    const demandMin = Math.max(0, futureLabels.length - DEFAULT_VISIBLE_DATES);
+    const financialMax = sortedDates.length - 1;
+    const financialMin = Math.max(0, sortedDates.length - DEFAULT_VISIBLE_DATES);
+    const actualUnitsColor = isDarkMode ? '#60a5fa' : '#0b2545';
+    const actualUnitsFill = isDarkMode
+      ? 'rgba(96, 165, 250, 0.18)'
+      : 'rgba(11, 37, 69, 0.1)';
 
     // Chart 1: Demand & Prediction Line
     if (demandCanvasRef.current) {
@@ -277,8 +292,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             {
               label: 'Actual Dispensed Units',
               data: [...historicalUnitData, ...new Array(futurePeriods).fill(null)],
-              borderColor: '#0b2545',
-              backgroundColor: 'rgba(11, 37, 69, 0.1)',
+              borderColor: actualUnitsColor,
+              backgroundColor: actualUnitsFill,
               fill: true,
               tension: 0.3,
               pointRadius: 4,
@@ -313,8 +328,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           },
           scales: {
             x: {
-              min: 0,
-              max: futureLabels.length - 1,
+              min: demandMin,
+              max: demandMax,
               ticks: { autoSkip: true, maxTicksLimit: 7, font: { size: 10 } },
             },
             y: {
@@ -324,8 +339,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           },
         },
       });
-      setDemandZoomStatus(`${futureLabels.length} of ${futureLabels.length} dates`);
-      setDemandPanLeftDisabled(true);
+      setDemandZoomStatus(`${demandMax - demandMin + 1} of ${futureLabels.length} dates`);
+      setDemandPanLeftDisabled(demandMin === 0);
       setDemandPanRightDisabled(true);
     }
 
@@ -357,8 +372,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           scales: {
             x: {
               stacked: true,
-              min: 0,
-              max: sortedDates.length - 1,
+              min: financialMin,
+              max: financialMax,
               ticks: { autoSkip: true, maxTicksLimit: 6, maxRotation: 0, font: { size: 10 } },
             },
             y: {
@@ -383,8 +398,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           },
         },
       });
-      setFinZoomStatus(`${sortedDates.length} of ${sortedDates.length} dates`);
-      setFinPanLeftDisabled(true);
+      setFinZoomStatus(`${financialMax - financialMin + 1} of ${sortedDates.length} dates`);
+      setFinPanLeftDisabled(financialMin === 0);
       setFinPanRightDisabled(true);
     }
 
@@ -412,7 +427,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             {
               label: 'Units dispensed',
               data: topDrugValues,
-              backgroundColor: '#0b2545',
+              backgroundColor: actualUnitsColor,
               hoverBackgroundColor: '#f59e0b',
               borderRadius: 4,
               barThickness: 16,
@@ -451,7 +466,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       financialChartRef.current?.destroy();
       drugShareChartRef.current?.destroy();
     };
-  }, [prescriptions]);
+  }, [prescriptions, isDarkMode, onUpdateMetrics]);
 
   // Run Campus Surge Simulator
   useEffect(() => {
@@ -576,7 +591,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             {
               label: 'Stock on hand threshold',
               data: stockOnHand === null ? labels.map(() => null) : labels.map(() => stockOnHand),
-              borderColor: '#0b2545',
+              borderColor: isDarkMode ? '#ffffff' : '#0b2545',
               borderDash: [5, 4],
               pointRadius: 0,
               fill: false,
@@ -615,24 +630,25 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     return () => {
       simForecastChartRef.current?.destroy();
     };
-  }, [selectedDrugId, surgePct, simHorizon, simBaselineDays, simStockOnHand, prescriptions]);
+  }, [selectedDrugId, surgePct, simHorizon, simBaselineDays, simStockOnHand, prescriptions, isDarkMode]);
 
   return (
     <div className="space-y-6">
       {/* Top Header & Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+          <h2 className="text-2xl font-extrabold text-slate-800 flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-amber-500" />
-            BUPC Predictive Health Analytics
+            Pharmacy Demand Analytics
           </h2>
           <p className="text-xs text-slate-500">
             Linear regression forecasting, demand velocity, and inventory exhaustion projections
           </p>
         </div>
         <button
+          type="button"
           onClick={onRefresh}
-          className="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+          className="primary-action px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
         >
           <RotateCcw className="w-3.5 h-3.5 text-blue-600" />
           <span>Refresh Models</span>
@@ -656,6 +672,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                   type="button"
                   onClick={() => panDemand(-1)}
                   disabled={demandPanLeftDisabled}
+                  aria-label="Pan demand chart left"
                   title="Pan left"
                   className="w-7 h-7 rounded flex items-center justify-center text-slate-600 hover:bg-white hover:shadow-xs disabled:opacity-40 transition"
                 >
@@ -664,6 +681,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 <button
                   type="button"
                   onClick={() => zoomDemand(-1)}
+                  aria-label="Zoom out on demand chart"
                   title="Zoom out"
                   className="w-7 h-7 rounded flex items-center justify-center text-slate-600 hover:bg-white hover:shadow-xs transition"
                 >
@@ -672,6 +690,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 <button
                   type="button"
                   onClick={() => zoomDemand(1)}
+                  aria-label="Zoom in on demand chart"
                   title="Zoom in"
                   className="w-7 h-7 rounded flex items-center justify-center text-slate-600 hover:bg-white hover:shadow-xs transition"
                 >
@@ -681,6 +700,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                   type="button"
                   onClick={() => panDemand(1)}
                   disabled={demandPanRightDisabled}
+                  aria-label="Pan demand chart right"
                   title="Pan right"
                   className="w-7 h-7 rounded flex items-center justify-center text-slate-600 hover:bg-white hover:shadow-xs disabled:opacity-40 transition"
                 >
@@ -689,6 +709,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 <button
                   type="button"
                   onClick={resetDemandZoom}
+                  aria-label="Reset demand chart zoom"
                   title="Reset zoom"
                   className="w-7 h-7 rounded flex items-center justify-center text-slate-600 hover:bg-white hover:shadow-xs transition"
                 >
@@ -723,6 +744,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 type="button"
                 onClick={() => panFin(-1)}
                 disabled={finPanLeftDisabled}
+                aria-label="Pan financial chart left"
                 title="Pan left"
                 className="w-7 h-7 rounded flex items-center justify-center text-slate-600 hover:bg-white hover:shadow-xs disabled:opacity-40 transition"
               >
@@ -731,6 +753,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               <button
                 type="button"
                 onClick={() => zoomFin(-1)}
+                aria-label="Zoom out on financial chart"
                 title="Zoom out"
                 className="w-7 h-7 rounded flex items-center justify-center text-slate-600 hover:bg-white hover:shadow-xs transition"
               >
@@ -739,6 +762,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               <button
                 type="button"
                 onClick={() => zoomFin(1)}
+                aria-label="Zoom in on financial chart"
                 title="Zoom in"
                 className="w-7 h-7 rounded flex items-center justify-center text-slate-600 hover:bg-white hover:shadow-xs transition"
               >
@@ -748,6 +772,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 type="button"
                 onClick={() => panFin(1)}
                 disabled={finPanRightDisabled}
+                aria-label="Pan financial chart right"
                 title="Pan right"
                 className="w-7 h-7 rounded flex items-center justify-center text-slate-600 hover:bg-white hover:shadow-xs disabled:opacity-40 transition"
               >
@@ -756,6 +781,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               <button
                 type="button"
                 onClick={resetFinZoom}
+                aria-label="Reset financial chart zoom"
                 title="Reset zoom"
                 className="w-7 h-7 rounded flex items-center justify-center text-slate-600 hover:bg-white hover:shadow-xs transition"
               >
@@ -788,7 +814,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           <div>
             <div className="flex items-center justify-between border-b pb-2">
               <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2">
-                <Sliders className="w-4 h-4 text-amber-600" />
+                <Sliders className="w-4 h-4 text-amber-700" />
                 Campus Demand Surge Simulator
               </h3>
               <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-bold">
@@ -796,7 +822,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               </span>
             </div>
             <p className="text-[11px] text-slate-500 mt-2">
-              Estimate procurement stock required when an influenza spike, athletic meet, or midterms surge occurs on campus.
+              Estimate procurement stock required under configurable demand surges and seasonal illness trends.
             </p>
 
             {/* Simulator Controls */}
@@ -897,8 +923,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               </p>
             </div>
             <div>
-              <p className="text-[10px] uppercase font-bold text-amber-600">Forecast Demand</p>
-              <h5 className="text-base font-extrabold text-amber-600 mt-0.5">
+              <p className="text-[10px] uppercase font-bold text-amber-700">Forecast Demand</p>
+              <h5 className="text-base font-extrabold text-amber-700 mt-0.5">
                 {simMessage ? 'N/A' : `${simPredictedTotalUnits.toLocaleString()} units`}
               </h5>
               <p className="text-[10px] text-slate-400 mt-0.5">Over {simHorizon} days</p>
@@ -954,7 +980,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                       simScenarios.map((sc, i) => (
                         <tr key={i} className="hover:bg-slate-50">
                           <td className="p-2 font-semibold text-slate-800">{sc.label}</td>
-                          <td className="p-2 text-right font-bold text-amber-600">
+                          <td className="p-2 text-right font-bold text-amber-700">
                             {sc.units.toLocaleString()} units
                           </td>
                           <td className="p-2 text-right text-blue-700">{sc.additional}</td>
@@ -970,9 +996,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             </section>
 
             {/* Projected Demand vs Stock Chart */}
-            <section>
-              <h4 className="text-xs font-bold text-slate-700 mb-2">Projected Demand vs. Stock</h4>
-              <div className="h-44 relative bg-slate-50/50 rounded-lg p-2 border border-slate-200">
+            <section aria-labelledby="projected-demand-title">
+              <h4 id="projected-demand-title" className="text-xs font-bold text-slate-700 mb-2">Projected Demand vs. Stock</h4>
+              <div className="simulator-chart-panel h-44 relative bg-slate-50/50 rounded-lg p-2 border border-slate-200">
                 {simMessage ? (
                   <div className="absolute inset-0 flex items-center justify-center text-center text-[11px] text-slate-400 p-4">
                     <p>{simMessage}</p>

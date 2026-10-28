@@ -1,12 +1,11 @@
-# BUPC Pharmacy Infirmary | Predictive Analytics & Management Portal
-> **Bicol University Polangui Campus (BUPC)** • Health Services Division  
-> *Data Warehouse (DW) Architecture & AI-Driven Predictive Health Analytics*
+# Pharmacy Operations & Analytics
+> *Prescription management, demand forecasting, and inventory planning*
 
 ---
 
 ## Overview
 
-The **BUPC Pharmacy Infirmary Management Portal** is an institutional health informatics and pharmacy decision-support system built for **Bicol University Polangui Campus** in Albay, Philippines. It bridges clinical dispensing workflows with dimensional data warehousing and predictive modeling to help campus healthcare administrators anticipate student and faculty health trends, manage drug formularies, and prevent inventory stockouts during peak university seasons.
+**Pharmacy Operations & Analytics** is a reusable pharmacy management and decision-support application for pharmacies, clinics, and healthcare organizations. It combines prescription dispensing, medication and patient directories, analytics, and inventory demand forecasting. Configure it for your organization by connecting your own Supabase project and pharmacy data.
 
 ---
 
@@ -15,18 +14,18 @@ The **BUPC Pharmacy Infirmary Management Portal** is an institutional health inf
 ### 1. Predictive Health Analytics & Demand Forecasting
 - **Linear Regression Demand Velocity Model**:
   - Fits chronological prescription events to a linear regression model ($y = mx + b$).
-  - Projects 30-day forward medication consumption and estimated campus budget requirements.
-  - Interactive chart navigation: Pan left/right, zoom in/out, and reset zoom to analyze specific academic periods.
+  - Projects 30-day medication consumption and estimated budget requirements.
+  - Interactive chart navigation: Pan left/right, zoom in/out, and reset zoom to analyze date ranges.
 - **Financial & Subsidy Breakdown**:
   - Visualizes patient out-of-pocket expenses versus institutional and PhilHealth insurance subsidies via stacked bar charts.
 - **Medication Velocity Rankings**:
   - Highlights the highest-dispensed medications to prioritize bulk procurement.
-- **Campus Demand Surge Simulator ("What-If" Scenario Modeling)**:
-  - Models medication depletion rates under campus-specific stress events:
+- **Demand Surge Simulator ("What-If" Scenario Modeling)**:
+  - Models medication depletion rates under configurable demand scenarios:
     - *Normal Baseline (+0%)*
-    - *Midterm Stress / Rainy Season Spikes (+25%)*
-    - *Flu Outbreak / Exam Week (+50%)*
-    - *Intramurals & Major Campus Athletics (+100%)*
+    - *Moderate Demand Increase (+25%)*
+    - *High Demand Increase (+50%)*
+    - *Peak Demand Increase (+100%)*
   - Automatically calculates:
     - **Baseline Daily Velocity** (units/day)
     - **Total Forecast Demand** across customizable horizons (15, 30, or 60 days)
@@ -38,14 +37,14 @@ The **BUPC Pharmacy Infirmary Management Portal** is an institutional health inf
 ---
 
 ### 2. Prescription Desk & Clinical Dispensing
-- **Fact Prescription Registry**: Complete transactional audit trail of all campus dispensations.
+- **Fact Prescription Registry**: Complete transactional audit trail of dispensations.
 - **Multi-Field Instant Search**: Filter prescriptions dynamically by patient name, medication, prescriber doctor, or unique Rx Fact ID.
 - **New Dispensation Modal**:
-  - Links selected patient, physician, medication, and campus infirmary branch.
+  - Links selected patient, prescriber, medication, and pharmacy branch.
   - Automatic resolution and insertion of the `dim_date` dimension record.
   - Real-time client-side financial balance calculation (`Patient Cost = Total Amount - Insurance Subsidy`).
 - **Official Printable Prescription Slip**:
-  - Formatted institutional dispensing receipt with Bicol University Polangui Campus Infirmary branding.
+  - Printable dispensing receipt with patient, medication, financial, and signature details.
   - Contains complete Rx details, patient affiliation, dosage, strength, and signature lines for both the attending physician and registered dispensing pharmacist.
   - Seamless printing support configured via `@media print`.
 
@@ -55,16 +54,16 @@ The **BUPC Pharmacy Infirmary Management Portal** is an institutional health inf
 Built on a standard dimensional data modeling framework:
 - **`fact_prescription`**: Transactional facts (quantities dispensed, days of supply, gross amount, insurance subsidy, net cost, and dimension foreign keys).
 - **`dim_drug`**: Formulary items (brand name, generic name, dosage form, and strength).
-- **`dim_patient`**: Student and personnel demographic directory (DOB, gender, address, campus department/college).
-- **`dim_prescriber`**: Licensed campus medical doctors and nurses (NPI/license number, medical specialty).
-- **`dim_pharmacy`**: Campus infirmary dispensary locations and depot branches.
+- **`dim_patient`**: Patient directory (DOB, gender, address, and affiliation).
+- **`dim_prescriber`**: Prescriber directory (NPI/license number and medical specialty).
+- **`dim_pharmacy`**: Pharmacy locations and branches.
 - **`dim_date`**: Chronological dimension (day of week, month, quarter, year).
 
 ---
 
 ### 4. Hybrid Cloud & Resilient Offline Caching
 - **Live Supabase Connection**: Direct PostgreSQL database operations using the Supabase client.
-- **Offline Cache Mode**: Automatic fallback to persistent local clinic datasets to ensure zero downtime even during campus network outages.
+- **Offline Cache Mode**: Fallback to locally cached datasets when the remote database is unavailable.
 
 ---
 
@@ -94,7 +93,7 @@ Built on a standard dimensional data modeling framework:
 1. **Clone the repository**:
    ```bash
    git clone <repository-url>
-   cd bupc-pharmacy-portal
+   cd pharmacy-operations-analytics
    ```
 
 2. **Install project dependencies**:
@@ -102,12 +101,12 @@ Built on a standard dimensional data modeling framework:
    npm install
    ```
 
-3. **Configure Environment Variables**:
-   Copy `.env.example` to `.env` if custom endpoints are needed:
+3. **Configure Supabase**:
+   Create a Supabase project, then copy `.env.example` to `.env` and add your project's URL and publishable key:
    ```bash
    cp .env.example .env
    ```
-   *(Note: The default Supabase public configuration is pre-configured in `src/services/supabase.ts`)*
+   The database should provide the pharmacy tables used by the app, including `dim_drug`, `dim_patient`, `dim_prescriber`, `dim_pharmacy`, `dim_date`, and `fact_prescription`.
 
 4. **Launch Development Server**:
    ```bash
@@ -141,7 +140,7 @@ Built on a standard dimensional data modeling framework:
 │   │   ├── PatientDirectory.tsx     # dim_patient directory and registration modal
 │   │   ├── PrescriberDirectory.tsx  # dim_prescriber directory and registration modal
 │   │   ├── PrescriptionDesk.tsx     # fact_prescription data table, filter, and slip trigger
-│   │   └── PrintableSlip.tsx        # Official BUPC Infirmary printable prescription receipt
+│   │   └── PrintableSlip.tsx        # Printable prescription receipt
 │   ├── services/
 │   │   └── supabase.ts              # Supabase client, offline seed datasets, and CRUD helpers
 │   ├── types/
@@ -158,7 +157,6 @@ Built on a standard dimensional data modeling framework:
 
 ---
 
-## License & Attribution
+## License
 
-Designed and developed for the **Bicol University Polangui Campus (BUPC) Infirmary & Health Services Unit**.  
-All rights reserved © 2026.
+This project is distributed under the MIT License. See [LICENSE](./LICENSE) for the copyright notice and permission terms.

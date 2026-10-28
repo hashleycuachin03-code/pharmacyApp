@@ -1,7 +1,184 @@
 @import "tailwindcss";
 
+:root {
+  color-scheme: light;
+  --app-primary: #4f46e5;
+  --app-primary-hover: #4338ca;
+  --app-background: #f8fafc;
+  --app-surface: #ffffff;
+  --app-border: #e2e8f0;
+  --app-text: #1e293b;
+  --app-text-secondary: #64748b;
+  --app-focus: #4f46e5;
+}
+
 @layer base {
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: var(--app-background);
+    color: var(--app-text);
   }
+
+  :focus-visible {
+    outline: 3px solid var(--app-focus);
+    outline-offset: 2px;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
+
+.app-canvas {
+  background-color: var(--app-background);
+  color: var(--app-text);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --app-primary: #4f46e5;
+  --app-primary-hover: #4338ca;
+  --app-background: #0f172a;
+  --app-surface: #111827;
+  --app-border: #334155;
+  --app-text: #e2e8f0;
+  --app-text-secondary: #94a3b8;
+  --app-focus: #a5b4fc;
+}
+
+:root[data-theme='dark'] body,
+:root[data-theme='dark'] #root > div {
+  background-color: var(--app-background);
+  color: var(--app-text);
+}
+
+:root[data-theme='dark'] .bg-white {
+  background-color: var(--app-surface);
+}
+
+:root[data-theme='dark'] .bg-slate-50,
+:root[data-theme='dark'] [class~='bg-slate-50/70'] {
+  background-color: #0f172a;
+}
+
+:root[data-theme='dark'] .bg-slate-100 {
+  background-color: #1e293b;
+}
+
+:root[data-theme='dark'] .bg-slate-200 {
+  background-color: #334155;
+}
+
+:root[data-theme='dark'] [class~='hover:bg-slate-50']:hover {
+  background-color: #1e293b;
+}
+
+:root[data-theme='dark'] [class~='hover:bg-slate-100']:hover {
+  background-color: #334155;
+}
+
+:root[data-theme='dark'] .text-slate-800,
+:root[data-theme='dark'] .text-slate-700 {
+  color: #e2e8f0;
+}
+
+:root[data-theme='dark'] .text-slate-600 {
+  color: #cbd5e1;
+}
+
+:root[data-theme='dark'] .text-slate-500 {
+  color: #94a3b8;
+}
+
+:root[data-theme='dark'] .border-slate-100,
+:root[data-theme='dark'] .border-slate-200,
+:root[data-theme='dark'] .border-slate-300 {
+  border-color: var(--app-border);
+}
+
+:root[data-theme='dark'] .divide-slate-100 > :not(:first-child) {
+  border-color: #334155;
+}
+
+:root[data-theme='dark'] .simulator-chart-panel {
+  background-color: #0f172a;
+  border-color: #334155;
+}
+
+.primary-action {
+  background-color: var(--app-primary);
+  border-color: var(--app-primary);
+  color: #fff;
+}
+
+.primary-action:hover:not(:disabled) {
+  background-color: var(--app-primary-hover);
+}
+
+.primary-action svg {
+  color: currentColor;
+}
+
+.tab-btn[aria-current='page'] {
+  background-color: #4f46e5;
+  color: #fff;
+}
+
+:root[data-theme='dark'] .tab-btn[aria-current='page'] {
+  background-color: #4f46e5;
+  color: #fff;
+}
+
+:root[data-theme='dark'] input,
+:root[data-theme='dark'] select,
+:root[data-theme='dark'] textarea {
+  background-color: #0f172a;
+  border-color: #475569;
+  color: #e2e8f0;
+}
+
+:root[data-theme='dark'] input::placeholder,
+:root[data-theme='dark'] textarea::placeholder {
+  color: #94a3b8;
+}
+
+:root[data-theme='dark'] input[type='date']::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+:root[data-theme='dark'] .text-amber-600,
+:root[data-theme='dark'] .text-amber-700 {
+  color: #fbbf24;
+}
+
+:root[data-theme='dark'] #printableSlip input,
+:root[data-theme='dark'] #printableSlip select,
+:root[data-theme='dark'] #printableSlip textarea {
+  background-color: #fff;
+  color: #1e293b;
+}
+
+:root[data-theme='dark'] #printableSlip.bg-white {
+  background-color: #fff;
+  color: #1e293b;
+}
+
+:root[data-theme='dark'] #printableSlip .bg-slate-50 {
+  background-color: #f8fafc;
+}
+
+:root[data-theme='dark'] #printableSlip .text-slate-800 {
+  color: #1e293b;
+}
+
+:root[data-theme='dark'] #printableSlip .text-slate-700 {
+  color: #334155;
+}
+
+:root[data-theme='dark'] #printableSlip .text-slate-600 {
+  color: #475569;
+}
+
+:root[data-theme='dark'] #printableSlip .text-slate-500 {
+  color: #64748b;
 }

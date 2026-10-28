@@ -274,7 +274,7 @@ export const DispenseModal: React.FC<DispenseModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 bg-[#0b2545] hover:bg-slate-800 text-amber-400 font-extrabold text-xs rounded shadow transition disabled:opacity-50"
+              className="primary-action px-4 py-2 font-extrabold text-xs rounded shadow transition disabled:opacity-50"
             >
               {isSubmitting ? 'Recording...' : 'Record Dispensation'}
             </button>

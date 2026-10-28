@@ -26,7 +26,7 @@ export const KpiMetrics: React.FC<KpiMetricsProps> = ({
             <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
               Total Rx Recorded
             </p>
-            <h4 className="text-xl sm:text-2xl font-extrabold text-slate-900 leading-tight">
+            <h4 className="text-xl sm:text-2xl font-extrabold text-slate-800 leading-tight">
               {totalRx}
             </h4>
           </div>
@@ -41,7 +41,7 @@ export const KpiMetrics: React.FC<KpiMetricsProps> = ({
             <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
               Projected 30-Day Demand
             </p>
-            <h4 className="text-xl sm:text-2xl font-extrabold text-amber-600 leading-tight">
+            <h4 className="text-xl sm:text-2xl font-extrabold text-amber-700 leading-tight">
               {projected30DayUnits > 0 ? `~${projected30DayUnits.toLocaleString()} units` : '-- units'}
             </h4>
           </div>

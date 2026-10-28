@@ -41,7 +41,7 @@ export const PrescriptionDesk: React.FC<PrescriptionDeskProps> = ({
 
         <button
           onClick={onOpenDispenseModal}
-          className="w-full sm:w-auto px-4 py-2 bg-[#0b2545] hover:bg-slate-800 text-amber-400 font-bold rounded-lg text-xs flex items-center justify-center gap-2 shadow transition active:scale-[0.98]"
+          className="primary-action w-full sm:w-auto px-4 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-2 shadow transition active:scale-[0.98]"
         >
           <PlusCircle className="w-4 h-4 text-amber-400" />
           <span>Dispense New Prescription</span>

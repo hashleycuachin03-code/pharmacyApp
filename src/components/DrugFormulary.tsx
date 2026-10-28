@@ -81,7 +81,7 @@ export const DrugFormulary: React.FC<DrugFormularyProps> = ({ drugs, onAddDrug }
           </div>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="px-3.5 py-2 bg-[#0b2545] text-white rounded-lg text-xs font-bold hover:bg-slate-800 transition flex items-center gap-1.5 shrink-0 shadow-xs"
+            className="primary-action px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-xs"
           >
             <Plus className="w-3.5 h-3.5 text-amber-400" />
             <span>Add New Drug</span>
@@ -228,7 +228,7 @@ export const DrugFormulary: React.FC<DrugFormularyProps> = ({ drugs, onAddDrug }
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 text-xs bg-[#0b2545] hover:bg-slate-800 text-amber-400 font-bold rounded shadow transition disabled:opacity-50"
+                  className="primary-action px-4 py-2 text-xs font-bold rounded shadow transition disabled:opacity-50"
                 >
                   {isSubmitting ? 'Saving...' : 'Save Drug'}
                 </button>

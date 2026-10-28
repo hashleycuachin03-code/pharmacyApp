@@ -1,6 +1,6 @@
 {
-  "name": "BUPC Pharmacy | Predictive Analytics & Management Portal",
-  "description": "Bicol University Polangui Campus Infirmary pharmacy management portal featuring predictive demand analytics, linear regression forecasting, surge simulation, and prescription dispensing.",
+  "name": "Pharmacy Operations & Analytics",
+  "description": "A pharmacy operations platform for prescription management, medication directories, demand forecasting, and inventory planning.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

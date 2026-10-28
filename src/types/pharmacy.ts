@@ -58,4 +58,4 @@ export interface FactPrescription {
   dim_date?: DimDate;
 }
 
-export type TabType = 'analytics' | 'prescriptions' | 'drugs' | 'patients' | 'prescribers';
+export type TabType = 'analytics' | 'explore' | 'prescriptions' | 'drugs' | 'patients' | 'prescribers';

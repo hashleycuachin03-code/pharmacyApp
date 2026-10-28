@@ -22,6 +22,7 @@ import { PrescriptionDesk } from './components/PrescriptionDesk';
 import { DrugFormulary } from './components/DrugFormulary';
 import { PatientDirectory } from './components/PatientDirectory';
 import { PrescriberDirectory } from './components/PrescriberDirectory';
+import { PharmacyExplorer } from './components/PharmacyExplorer';
 import { DispenseModal } from './components/DispenseModal';
 import { PrintableSlip } from './components/PrintableSlip';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
@@ -35,6 +36,9 @@ export default function App() {
   const [prescriptions, setPrescriptions] = useState<FactPrescription[]>([]);
   const [dataSource, setDataSource] = useState<'supabase' | 'cache'>('cache');
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isDarkMode, setIsDarkMode] = useState(
+    () => window.localStorage.getItem('bupc-theme') === 'dark'
+  );
 
   // Modals
   const [isDispenseModalOpen, setIsDispenseModalOpen] = useState(false);
@@ -43,6 +47,10 @@ export default function App() {
   // KPI numbers derived from AnalyticsView
   const [projected30DayUnits, setProjected30DayUnits] = useState(0);
   const [projected30DayCost, setProjected30DayCost] = useState(0);
+  const handleUpdateMetrics = useCallback((units: number, cost: number) => {
+    setProjected30DayUnits(units);
+    setProjected30DayCost(cost);
+  }, []);
 
   // Toast Notification state
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
@@ -79,6 +87,12 @@ export default function App() {
   useEffect(() => {
     loadAllData();
   }, [loadAllData]);
+
+  useEffect(() => {
+    const theme = isDarkMode ? 'dark' : 'light';
+    document.documentElement.dataset.theme = theme;
+    window.localStorage.setItem('bupc-theme', theme);
+  }, [isDarkMode]);
 
   // Handlers for dimension creation
   const handleAddDrug = async (payload: Omit<DimDrug, 'drug_id'>) => {
@@ -138,15 +152,15 @@ export default function App() {
   };
 
   return (
-    <div className="bg-slate-100 text-slate-800 min-h-screen flex flex-col antialiased">
+    <div className="app-canvas min-h-screen flex flex-col antialiased">
       {/* Toast Alert */}
       {toast && (
-        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-xl border text-xs font-semibold bg-white animate-in slide-in-from-bottom-5 duration-200">
+        <div role={toast.type === 'error' ? 'alert' : 'status'} aria-live={toast.type === 'error' ? 'assertive' : 'polite'} aria-atomic="true" className="fixed bottom-5 right-5 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-xl border text-xs font-semibold bg-white animate-in slide-in-from-bottom-5 duration-200">
           {toast.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
           {toast.type === 'error' && <AlertCircle className="w-4 h-4 text-rose-600" />}
           {toast.type === 'info' && <Info className="w-4 h-4 text-blue-600" />}
           <span className="text-slate-800">{toast.message}</span>
-          <button onClick={() => setToast(null)} className="ml-2 text-slate-400 hover:text-slate-600">
+          <button type="button" onClick={() => setToast(null)} aria-label="Dismiss notification" className="ml-2 text-slate-400 hover:text-slate-600">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -159,6 +173,8 @@ export default function App() {
         dataSource={dataSource}
         onReload={loadAllData}
         isLoading={isLoading}
+        isDarkMode={isDarkMode}
+        onToggleTheme={() => setIsDarkMode((darkMode) => !darkMode)}
       />
 
       {/* Metric KPI Bar */}
@@ -170,17 +186,15 @@ export default function App() {
       />
 
       {/* Main View Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+      <main id="main-content" aria-label="Pharmacy management dashboard" className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
         {/* VIEW 0: PREDICTIVE ANALYTICS */}
         {activeTab === 'analytics' && (
           <AnalyticsView
             prescriptions={prescriptions}
             drugs={drugs}
+            isDarkMode={isDarkMode}
             onRefresh={loadAllData}
-            onUpdateMetrics={(units, cost) => {
-              setProjected30DayUnits(units);
-              setProjected30DayCost(cost);
-            }}
+            onUpdateMetrics={handleUpdateMetrics}
           />
         )}
 
@@ -190,6 +204,15 @@ export default function App() {
             prescriptions={prescriptions}
             onOpenDispenseModal={() => setIsDispenseModalOpen(true)}
             onOpenSlipModal={(rx) => setSlipPrescription(rx)}
+          />
+        )}
+
+        {activeTab === 'explore' && (
+          <PharmacyExplorer
+            prescriptions={prescriptions}
+            drugs={drugs}
+            prescribers={prescribers}
+            isDarkMode={isDarkMode}
           />
         )}
 
@@ -221,7 +244,7 @@ export default function App() {
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white py-4 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-2">
-          <p>© 2026 Bicol University Polangui Campus (BUPC) Infirmary • AI &amp; Data Warehouse Analytics</p>
+          <p>Pharmacy Operations &amp; Analytics • Prescription Management &amp; Inventory Planning</p>
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5">
               <span className={`w-2 h-2 rounded-full ${dataSource === 'supabase' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
