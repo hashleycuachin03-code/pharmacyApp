@@ -380,6 +380,12 @@
   min-height: 20rem;
 }
 
+.explorer-no-results {
+  border-color: #d7e3e8;
+  background-color: #f3f8fa;
+  color: #355162;
+}
+
 :root[data-theme='dark'] .explorer-search-panel,
 :root[data-theme='dark'] .explorer-results {
   background-color: #101a29;
@@ -469,6 +475,12 @@
 :root[data-theme='dark'] .explorer-empty {
   background-color: #142235;
   color: #c3d5e5;
+}
+
+:root[data-theme='dark'] .explorer-no-results {
+  background-color: #142235;
+  border-color: #314259;
+  color: #d5e2ef;
 }
 
 :root:not([data-theme='dark']) .search-toggle.is-active {
@@ -569,6 +581,12 @@
 :root:not([data-theme='dark']) .explorer-empty {
   background-color: #f0f7f8;
   color: #496574;
+}
+
+:root:not([data-theme='dark']) .explorer-no-results {
+  background-color: #f0f7f8;
+  border-color: #cbdbe1;
+  color: #355162;
 }
 
 :root:not([data-theme='dark']) {

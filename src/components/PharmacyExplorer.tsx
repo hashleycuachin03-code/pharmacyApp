@@ -118,17 +118,25 @@ function answerQuestion(
         },
       ])
   ).values()];
-  const knownPrescribers = [...new Map(
-    prescriptions
-      .filter((prescription) => prescription.dim_prescriber)
-      .map((prescription) => [
-        prescription.prescriber_id,
-        {
-          id: prescription.prescriber_id,
-          name: `${prescription.dim_prescriber?.first_name || ''} ${prescription.dim_prescriber?.last_name || ''}`.trim(),
-        },
-      ])
-  ).values()];
+  const knownPrescribersById = new Map(
+    prescribers.map((prescriber) => [
+      prescriber.prescriber_id,
+      {
+        id: prescriber.prescriber_id,
+        name: `${prescriber.first_name || ''} ${prescriber.last_name || ''}`.trim(),
+      },
+    ])
+  );
+  prescriptions.forEach((prescription) => {
+    const joinedPrescriber = prescription.dim_prescriber;
+    if (joinedPrescriber && !knownPrescribersById.has(prescription.prescriber_id)) {
+      knownPrescribersById.set(prescription.prescriber_id, {
+        id: prescription.prescriber_id,
+        name: `${joinedPrescriber.first_name || ''} ${joinedPrescriber.last_name || ''}`.trim(),
+      });
+    }
+  });
+  const knownPrescribers = [...knownPrescribersById.values()];
   const namedPatient = knownPatients
     .filter((patient) => patient.name && normalizedQuery.includes(normalizeText(patient.name)))
     .sort((patientA, patientB) => patientB.name.length - patientA.name.length)[0];
@@ -551,6 +559,16 @@ export const PharmacyExplorer: React.FC<PharmacyExplorerProps> = ({
             {result.type === 'chart' && (
               <div className="explorer-chart h-80 relative">
                 <canvas ref={chartCanvasRef} role="img" aria-label={`${result.title} bar chart`}></canvas>
+              </div>
+            )}
+
+            {result.type === 'records' && result.showPrescriptionRecords && result.prescriptions.length === 0 && (
+              <div className="explorer-no-results rounded-xl border p-4" role="status">
+                <p className="font-semibold">No matching prescriptions in the loaded data</p>
+                <p className="mt-1 text-sm">{result.description}</p>
+                <p className="mt-2 text-xs">
+                  Check the prescriber’s name and year, or try a broader search without one of the filters.
+                </p>
               </div>
             )}
 

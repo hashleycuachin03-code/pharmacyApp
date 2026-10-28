@@ -65,9 +65,15 @@ export async function fetchDimensions(): Promise<LoadDimensionsResult> {
 
 export async function fetchPrescriptions(): Promise<{ data: FactPrescription[]; source: 'supabase' | 'cache' }> {
   try {
-    const { data, error } = await supabase
-      .from('fact_prescription')
-      .select(`
+    const pageSize = 1000;
+    const prescriptionRows: any[] = [];
+    let offset = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from('fact_prescription')
+        .select(`
         prescription_fact_id,
         quantity_dispensed,
         days_supply,
@@ -85,10 +91,18 @@ export async function fetchPrescriptions(): Promise<{ data: FactPrescription[]; 
         dim_pharmacy (branch_name, store_number),
         dim_date (full_date)
       `)
-      .order('prescription_fact_id', { ascending: false });
+        .order('prescription_fact_id', { ascending: true })
+        .range(offset, offset + pageSize - 1);
 
-    if (!error && data) {
-      const mapped = data.map((item: any) => ({
+      if (error) throw error;
+
+      prescriptionRows.push(...(data || []));
+      hasMore = (data?.length || 0) === pageSize;
+      offset += pageSize;
+    }
+
+    const mapped = prescriptionRows
+      .map((item) => ({
         prescription_fact_id: item.prescription_fact_id,
         pharmacy_id: item.pharmacy_id,
         prescriber_id: item.prescriber_id,
@@ -105,13 +119,13 @@ export async function fetchPrescriptions(): Promise<{ data: FactPrescription[]; 
         dim_prescriber: item.dim_prescriber,
         dim_pharmacy: item.dim_pharmacy,
         dim_date: item.dim_date,
-      }));
+      }))
+      .sort((prescriptionA, prescriptionB) =>
+        prescriptionB.prescription_fact_id - prescriptionA.prescription_fact_id
+      );
 
-      localPrescriptions = mapped;
-      return { data: mapped, source: 'supabase' };
-    }
-
-    return { data: [], source: 'cache' };
+    localPrescriptions = mapped;
+    return { data: mapped, source: 'supabase' };
   } catch (err) {
     console.warn('Supabase fetch prescriptions failed:', err);
     return { data: [], source: 'cache' };
