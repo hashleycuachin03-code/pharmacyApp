@@ -124,6 +124,11 @@ Built on a standard dimensional data modeling framework:
    npm run lint
    ```
 
+**Live Web Access**
+
+- The live application is deployed on Render and accessible at:
+https://pharmacybupcapp.onrender.com/
+
 ---
 
 ## Project Directory Structure
