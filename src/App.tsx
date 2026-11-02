@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   DimDrug, 
   DimPatient, 
@@ -29,6 +29,7 @@ import { PrescriberDirectory } from './components/PrescriberDirectory';
 import { PharmacyExplorer } from './components/PharmacyExplorer';
 import { DispenseModal } from './components/DispenseModal';
 import { PrintableSlip } from './components/PrintableSlip';
+import { calculateThirtyDayProjection } from './services/analytics';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
 export default function App() {
@@ -62,13 +63,10 @@ export default function App() {
   const [isDispenseModalOpen, setIsDispenseModalOpen] = useState(false);
   const [slipPrescription, setSlipPrescription] = useState<FactPrescription | null>(null);
 
-  // KPI numbers derived from AnalyticsView
-  const [projected30DayUnits, setProjected30DayUnits] = useState(0);
-  const [projected30DayCost, setProjected30DayCost] = useState(0);
-  const handleUpdateMetrics = useCallback((units: number, cost: number) => {
-    setProjected30DayUnits(units);
-    setProjected30DayCost(cost);
-  }, []);
+  const projectedMetrics = useMemo(
+    () => calculateThirtyDayProjection(prescriptions),
+    [prescriptions]
+  );
 
   // Toast Notification state
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
@@ -147,21 +145,6 @@ export default function App() {
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
   }, []);
-
-  const handlePrimaryAction = () => {
-    if (activeTab === 'prescriptions') {
-      setIsDispenseModalOpen(true);
-      return;
-    }
-
-    const actionIds: Partial<Record<TabType, string>> = {
-      drugs: 'add-drug-action',
-      patients: 'add-patient-action',
-      prescribers: 'add-prescriber-action',
-    };
-    const actionId = actionIds[activeTab];
-    if (actionId) document.getElementById(actionId)?.click();
-  };
 
   // Handlers for dimension creation
   const handleAddDrug = async (payload: Omit<DimDrug, 'drug_id'>) => {
@@ -260,15 +243,14 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onOpenMobileNav={() => setIsMobileSidebarOpen(true)}
-        onPrimaryAction={handlePrimaryAction}
         onNotification={() => showToast('You’re all caught up.', 'info')}
       />
 
       {/* Metric KPI Bar */}
       <KpiMetrics
         totalRx={prescriptions.length}
-        projected30DayUnits={projected30DayUnits}
-        projected30DayCost={projected30DayCost}
+        projected30DayUnits={projectedMetrics.units}
+        projected30DayCost={projectedMetrics.cost}
         drugCount={drugs.length}
       />
 
@@ -281,7 +263,6 @@ export default function App() {
             drugs={drugs}
             isDarkMode={isDarkMode}
             onRefresh={loadAllData}
-            onUpdateMetrics={handleUpdateMetrics}
           />
         )}
 

@@ -2,14 +2,14 @@
 
 :root {
   color-scheme: light;
-  --app-primary: #4f46e5;
-  --app-primary-hover: #4338ca;
+  --app-primary: #0f766e;
+  --app-primary-hover: #115e59;
   --app-background: #f8fafc;
   --app-surface: #ffffff;
   --app-border: #e2e8f0;
   --app-text: #1e293b;
   --app-text-secondary: #64748b;
-  --app-focus: #4f46e5;
+  --app-focus: #0f766e;
 }
 
 @layer base {
@@ -36,8 +36,8 @@
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --app-primary: #4f46e5;
-  --app-primary-hover: #4338ca;
+  --app-primary: #0f766e;
+  --app-primary-hover: #0d9488;
   --app-background: #080e19;
   --app-surface: #101a29;
   --app-border: #253247;

@@ -51,7 +51,6 @@ interface AnalyticsViewProps {
   drugs: DimDrug[];
   isDarkMode: boolean;
   onRefresh: () => void;
-  onUpdateMetrics: (units: number, cost: number) => void;
 }
 
 export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
@@ -59,7 +58,6 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   drugs,
   isDarkMode,
   onRefresh,
-  onUpdateMetrics,
 }) => {
   // Chart Canvas Refs
   const demandCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -280,10 +278,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     ChartJS.defaults.color = isDarkMode ? '#cbd5e1' : '#475569';
     ChartJS.defaults.borderColor = isDarkMode ? '#334155' : '#e2e8f0';
 
-    if (prescriptions.length === 0) {
-      onUpdateMetrics(0, 0);
-      return;
-    }
+    if (prescriptions.length === 0) return;
 
     // Group prescription facts by chronological date
     const dateMap: Record<string, { units: number; billed: number; cost: number; insurance: number }> = {};
@@ -328,13 +323,6 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       forecastedUnitData.push(predictedVal);
     }
 
-    // Update KPI Badges with predictions
-    const avgUnits = yUnits.reduce((a, b) => a + b, 0) / (yUnits.length || 1);
-    const projected30DayUnits = Math.round(avgUnits * 30);
-    const avgCostPerUnit = yBilled.reduce((a, b) => a + b, 0) / (yUnits.reduce((a, b) => a + b, 0) || 1) || 10;
-    const projected30DayCost = projected30DayUnits * avgCostPerUnit;
-
-    onUpdateMetrics(projected30DayUnits, projected30DayCost);
     const demandMax = futureLabels.length - 1;
     const demandMin = Math.max(0, futureLabels.length - DEFAULT_VISIBLE_DATES);
     const financialMax = sortedDates.length - 1;
@@ -530,7 +518,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       financialChartRef.current?.destroy();
       drugShareChartRef.current?.destroy();
     };
-  }, [prescriptions, drugs, isDarkMode, onUpdateMetrics]);
+  }, [prescriptions, drugs, isDarkMode]);
 
   // Run Campus Surge Simulator
   useEffect(() => {

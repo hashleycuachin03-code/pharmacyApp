@@ -2,13 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Bell,
   Command,
-  FileText,
   Menu,
-  Pill,
-  Plus,
   Search,
-  Stethoscope,
-  Users,
   X,
 } from 'lucide-react';
 import { TabType } from '../types/pharmacy';
@@ -17,15 +12,14 @@ interface HeaderProps {
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
   onOpenMobileNav: () => void;
-  onPrimaryAction: () => void;
   onNotification: () => void;
 }
 
-const pageDetails: Record<TabType, { group: string; title: string; action?: string; icon?: typeof FileText }> = {
-  prescriptions: { group: 'Operations', title: 'Prescription Desk', action: 'New prescription', icon: FileText },
-  drugs: { group: 'Operations', title: 'Drug Formulary', action: 'Add medication', icon: Pill },
-  patients: { group: 'Operations', title: 'Patients', action: 'Add patient', icon: Users },
-  prescribers: { group: 'Operations', title: 'Prescribers', action: 'Add prescriber', icon: Stethoscope },
+const pageDetails: Record<TabType, { group: string; title: string }> = {
+  prescriptions: { group: 'Operations', title: 'Prescription Desk' },
+  drugs: { group: 'Operations', title: 'Drug Formulary' },
+  patients: { group: 'Operations', title: 'Patients' },
+  prescribers: { group: 'Operations', title: 'Prescribers' },
   analytics: { group: 'Analytics & insights', title: 'Predictive Analytics' },
   anomalies: { group: 'Analytics & insights', title: 'Anomaly Insights' },
   explore: { group: 'Explore', title: 'Quick search' },
@@ -45,7 +39,6 @@ export const Header: React.FC<HeaderProps> = ({
   activeTab,
   setActiveTab,
   onOpenMobileNav,
-  onPrimaryAction,
   onNotification,
 }) => {
   const [query, setQuery] = useState('');
@@ -56,8 +49,6 @@ export const Header: React.FC<HeaderProps> = ({
   const matchingPages = searchablePages.filter((item) =>
     `${item.title} ${item.group}`.toLowerCase().includes(query.trim().toLowerCase())
   );
-  const ActionIcon = page.icon;
-
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
@@ -165,13 +156,6 @@ export const Header: React.FC<HeaderProps> = ({
           <Bell aria-hidden="true" className="h-[18px] w-[18px]" />
         </button>
 
-        {page.action && ActionIcon && (
-          <button type="button" className="header-primary-action" onClick={onPrimaryAction}>
-            <Plus aria-hidden="true" className="h-4 w-4" />
-            <ActionIcon aria-hidden="true" className="hidden h-4 w-4 sm:block" />
-            <span>{page.action}</span>
-          </button>
-        )}
         {isSearchOpen && (
           <button
             type="button"

@@ -15,7 +15,7 @@
 - Responsive, collapsible sidebar separates operational workflows from analytics.
 - Quick search is available from the sidebar and the global `Ctrl+K` / `Cmd+K` page search.
 - The settings panel provides system/light/dark appearance options, data sync and CSV exports, and account details.
-- A compact header shows the current page and relevant action; the sidebar provides access to sync and settings.
+- A compact header shows the current page, global search, and notifications; operational add actions remain within their respective views.
 
 ### 2. Predictive Analytics & Demand Forecasting
 - **Linear Regression Demand Velocity Model**:
@@ -117,7 +117,7 @@ Built on a standard dimensional data modeling framework:
    ```
 
 3. **Configure environment variables**:
-   Copy `.env.example` to `.env` and set your Supabase project URL and publishable key:
+   `.env.example` is a template and is not loaded by the server. Copy it to `.env`, then set your Supabase project URL and publishable key:
    ```bash
    cp .env.example .env
    ```
@@ -129,7 +129,7 @@ Built on a standard dimensional data modeling framework:
    | `VITE_SUPABASE_PUBLISHABLE_KEY` | No | Supabase publishable key used by the browser client. |
    | `GEMINI_API_KEY` | No | Server-only Gemini key for AI anomaly explanations. |
 
-   To enable AI explanations locally, set `GEMINI_API_KEY` in `.env` and restart the server. Keep it private: do not prefix it with `VITE_` or expose it in browser code.
+   To enable AI explanations locally, add a valid Gemini API key to `GEMINI_API_KEY` in `.env` and restart the server. Keep this key private: do not commit it, prefix it with `VITE_`, or expose it in browser code.
    The connected database should provide `dim_drug`, `dim_patient`, `dim_prescriber`, `dim_pharmacy`, `dim_date`, and `fact_prescription`.
 
 4. **Launch Development Server**:
