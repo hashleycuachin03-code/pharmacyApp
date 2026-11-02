@@ -78,7 +78,7 @@ app.post('/api/anomaly-explanation', async (request, response) => {
   try {
     const ai = new GoogleGenAI({ apiKey });
     const result = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.8-flash',
       contents: [
         'You are an analytics assistant explaining pharmacy operations data to a pharmacy manager. Explain only the supplied aggregate daily dispensing and billed-value anomalies. State what changed, compare it with the supplied historical baseline, give 1-3 operational hypotheses as possibilities (never claim causality), and suggest a practical data/inventory check. Clearly state that these are statistical signals, not clinical advice. If the records are too sparse, say so. Use concise plain language and headings. Do not infer patient identities or medical diagnoses.',
         `Aggregate daily metrics (no patient-level data):\n${JSON.stringify(safePoints)}`,
@@ -92,6 +92,19 @@ app.post('/api/anomaly-explanation', async (request, response) => {
     response.json({ explanation });
   } catch (error) {
     console.error('AI anomaly explanation request failed:', error);
+    const providerMessage = error instanceof Error ? error.message.toLowerCase() : '';
+    if (providerMessage.includes('project-unavailable') || providerMessage.includes('free tier is not available')) {
+      response.status(503).json({
+        error: 'Gemini API access is unavailable for this project. Enable billing for the Google AI project or configure a key from a project with Gemini API access.',
+      });
+      return;
+    }
+    if (providerMessage.includes('api key not valid') || providerMessage.includes('invalid api key')) {
+      response.status(503).json({
+        error: 'The configured Gemini API key is invalid or revoked. Add a valid server-side key and restart the server.',
+      });
+      return;
+    }
     response.status(502).json({ error: 'Could not generate an AI explanation right now. Please try again later.' });
   }
 });
@@ -104,8 +117,20 @@ if (isProduction) {
   app.use(vite.middlewares);
 }
 
-app.listen(port, '0.0.0.0', () => {
-  console.log(`PharmaPulse server listening on port ${port}`);
+const host = isProduction ? '0.0.0.0' : '127.0.0.1';
+const server = app.listen(port, host, () => {
+  console.log(`PharmaPulse ${isProduction ? 'production' : 'development'} server is ready.`);
+  console.log(`Local: http://localhost:${port}`);
+  if (isProduction) console.log(`Listening on ${host}:${port}`);
+});
+
+server.on('error', (error: NodeJS.ErrnoException) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Port ${port} is already in use. Stop the other server or choose another port.`);
+  } else {
+    console.error('Could not start the PharmaPulse server:', error);
+  }
+  process.exit(1);
 });
 
 const cleanupRateLimit = setInterval(() => {

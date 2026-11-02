@@ -12,7 +12,8 @@
 ## Key Features & Capabilities
 
 ### 1. Application Navigation & Settings
-- Responsive, collapsible sidebar separates operational workflows from analytics.
+- Home landing page provides quick links to core workflows and a recent-prescriptions overview.
+- Responsive, collapsible sidebar separates the overview, operational workflows, and analytics.
 - Quick search is available from the sidebar and the global `Ctrl+K` / `Cmd+K` page search.
 - The settings panel provides system/light/dark appearance options, data sync and CSV exports, and account details.
 - A compact header shows the current page, global search, and notifications; operational add actions remain within their respective views.
@@ -129,14 +130,21 @@ Built on a standard dimensional data modeling framework:
    | `VITE_SUPABASE_PUBLISHABLE_KEY` | No | Supabase publishable key used by the browser client. |
    | `GEMINI_API_KEY` | No | Server-only Gemini key for AI anomaly explanations. |
 
-   To enable AI explanations locally, add a valid Gemini API key to `GEMINI_API_KEY` in `.env` and restart the server. Keep this key private: do not commit it, prefix it with `VITE_`, or expose it in browser code.
+   To enable AI explanations locally, add a valid Gemini API key to `GEMINI_API_KEY` in `.env` and restart the server. The Google AI project associated with the key must have Gemini API access; billing may be required. Keep this key private: do not commit it, prefix it with `VITE_`, or expose it in browser code.
    The connected database should provide `dim_drug`, `dim_patient`, `dim_prescriber`, `dim_pharmacy`, `dim_date`, and `fact_prescription`.
 
 4. **Launch Development Server**:
    ```bash
    npm run dev
    ```
-   The Express server hosts the Vite development app and the `/api/anomaly-explanation` endpoint at `http://localhost:3000`.
+   The terminal prints the local address when the server is ready. Open `http://localhost:3000` (or `http://127.0.0.1:3000`) in your browser. The Express server hosts the Vite development app and the `/api/anomaly-explanation` endpoint together.
+
+   If port `3000` is already in use, stop the other dev server with `Ctrl+C`, or choose another port in PowerShell:
+   ```powershell
+   $env:PORT = 3001
+   npm run dev
+   ```
+   Then open `http://localhost:3001`.
 
 5. **Build for Production**:
    ```bash
@@ -177,6 +185,7 @@ Built on a standard dimensional data modeling framework:
 │   │   ├── DispenseModal.tsx        # Prescription dispensing form
 │   │   ├── DrugFormulary.tsx        # Medication directory
 │   │   ├── Header.tsx               # Page context, global search, and actions
+│   │   ├── HomeView.tsx             # Home overview, shortcuts, and recent prescriptions
 │   │   ├── KpiMetrics.tsx           # Dashboard KPI cards
 │   │   ├── PatientDirectory.tsx     # Patient directory
 │   │   ├── PharmacyExplorer.tsx     # Quick search and exploration view

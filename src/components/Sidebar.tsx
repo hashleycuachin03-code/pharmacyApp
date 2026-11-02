@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
+  Home,
   Pill,
   Settings,
   Users,
@@ -132,6 +133,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </button>
 
         <nav className="sidebar-navigation" aria-label="Primary navigation">
+          <div className="sidebar-nav-group">
+            <p className="sidebar-section-label">Overview</p>
+            {navButton('home', 'Home', Home)}
+          </div>
           <div className="sidebar-nav-group">
             <p className="sidebar-section-label">Operations</p>
             {operations.map(({ id, label, icon }) => navButton(id, label, icon))}

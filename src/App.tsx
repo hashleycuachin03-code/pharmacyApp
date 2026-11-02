@@ -29,11 +29,12 @@ import { PrescriberDirectory } from './components/PrescriberDirectory';
 import { PharmacyExplorer } from './components/PharmacyExplorer';
 import { DispenseModal } from './components/DispenseModal';
 import { PrintableSlip } from './components/PrintableSlip';
+import { HomeView } from './components/HomeView';
 import { calculateThirtyDayProjection } from './services/analytics';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<TabType>('prescriptions');
+  const [activeTab, setActiveTab] = useState<TabType>('home');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
     () => window.localStorage.getItem('pharmapulse-sidebar-collapsed') === 'true'
   );
@@ -256,6 +257,14 @@ export default function App() {
 
       {/* Main View Area */}
       <main id="main-content" aria-label="Pharmacy management dashboard" className="dashboard-main px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+        {activeTab === 'home' && (
+          <HomeView
+            prescriptions={prescriptions}
+            onNavigate={setActiveTab}
+            onNewPrescription={() => setIsDispenseModalOpen(true)}
+          />
+        )}
+
         {/* VIEW 0: PREDICTIVE ANALYTICS */}
         {activeTab === 'analytics' && (
           <AnalyticsView

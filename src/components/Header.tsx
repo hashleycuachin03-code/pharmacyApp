@@ -16,6 +16,7 @@ interface HeaderProps {
 }
 
 const pageDetails: Record<TabType, { group: string; title: string }> = {
+  home: { group: 'Overview', title: 'Home' },
   prescriptions: { group: 'Operations', title: 'Prescription Desk' },
   drugs: { group: 'Operations', title: 'Drug Formulary' },
   patients: { group: 'Operations', title: 'Patients' },
@@ -26,6 +27,7 @@ const pageDetails: Record<TabType, { group: string; title: string }> = {
 };
 
 const searchablePages: Array<{ id: TabType; title: string; group: string }> = [
+  { id: 'home', title: 'Home', group: 'Overview' },
   { id: 'prescriptions', title: 'Prescription Desk', group: 'Operations' },
   { id: 'drugs', title: 'Drug Formulary', group: 'Operations' },
   { id: 'patients', title: 'Patients', group: 'Operations' },
