@@ -85,7 +85,7 @@ export async function fetchPrescriptions(): Promise<{ data: FactPrescription[]; 
         drug_id,
         patient_id,
         date_id,
-        dim_drug (drug_name, brand_name, dosage_form, strength),
+        dim_drug (drug_name, brand_name, generic_name, dosage_form, strength),
         dim_patient (first_name, last_name, dob, gender),
         dim_prescriber (first_name, last_name, specialty),
         dim_pharmacy (branch_name, store_number),

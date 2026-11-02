@@ -83,6 +83,7 @@ export const PatientDirectory: React.FC<PatientDirectoryProps> = ({
             />
           </div>
           <button
+            id="add-patient-action"
             onClick={() => setIsModalOpen(true)}
             className="primary-action px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-xs"
           >

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { Search, PlusCircle, Printer, FileText, CheckCircle2 } from 'lucide-react';
 import { FactPrescription } from '../types/pharmacy';
 
@@ -8,21 +8,46 @@ interface PrescriptionDeskProps {
   onOpenSlipModal: (rx: FactPrescription) => void;
 }
 
+const PAGE_SIZE = 50;
+
 export const PrescriptionDesk: React.FC<PrescriptionDeskProps> = ({
   prescriptions,
   onOpenDispenseModal,
   onOpenSlipModal,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(0);
+  const deferredSearchTerm = useDeferredValue(searchTerm);
 
-  const filtered = prescriptions.filter((rx) => {
-    const term = searchTerm.toLowerCase();
-    const patName = `${rx.dim_patient?.first_name || ''} ${rx.dim_patient?.last_name || ''}`.toLowerCase();
-    const drugName = (rx.dim_drug?.drug_name || '').toLowerCase();
-    const docName = `${rx.dim_prescriber?.first_name || ''} ${rx.dim_prescriber?.last_name || ''}`.toLowerCase();
-    const rxId = String(rx.prescription_fact_id);
-    return patName.includes(term) || drugName.includes(term) || docName.includes(term) || rxId.includes(term);
-  });
+  const filtered = useMemo(() => {
+    const term = deferredSearchTerm.trim().toLocaleLowerCase();
+    if (!term) return prescriptions;
+
+    return prescriptions.filter((rx) => {
+      const patName = `${rx.dim_patient?.first_name || ''} ${rx.dim_patient?.last_name || ''}`.toLocaleLowerCase();
+      const drugName = (rx.dim_drug?.drug_name || '').toLocaleLowerCase();
+      const docName = `${rx.dim_prescriber?.first_name || ''} ${rx.dim_prescriber?.last_name || ''}`.toLocaleLowerCase();
+      const rxId = String(rx.prescription_fact_id);
+      return patName.includes(term) || drugName.includes(term) || docName.includes(term) || rxId.includes(term);
+    });
+  }, [deferredSearchTerm, prescriptions]);
+
+  const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
+  const visiblePrescriptions = useMemo(
+    () => filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
+    [filtered, page]
+  );
+
+  useEffect(() => {
+    setPage(0);
+  }, [deferredSearchTerm]);
+
+  useEffect(() => {
+    setPage((currentPage) => Math.min(currentPage, Math.max(pageCount - 1, 0)));
+  }, [pageCount]);
+
+  const firstVisibleRecord = filtered.length === 0 ? 0 : page * PAGE_SIZE + 1;
+  const lastVisibleRecord = Math.min((page + 1) * PAGE_SIZE, filtered.length);
 
   return (
     <div className="prescription-desk space-y-6">
@@ -42,7 +67,10 @@ export const PrescriptionDesk: React.FC<PrescriptionDeskProps> = ({
           <input
             type="text"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPage(0);
+            }}
             aria-label="Search prescription records"
             placeholder="Search by patient, medication, prescriber, or Rx ID..."
             className="prescription-search-input w-full pl-12 pr-4 py-3 text-sm font-medium bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm transition"
@@ -90,7 +118,7 @@ export const PrescriptionDesk: React.FC<PrescriptionDeskProps> = ({
                   </td>
                 </tr>
               ) : (
-                filtered.map((rx) => {
+                visiblePrescriptions.map((rx) => {
                   const drug = rx.dim_drug;
                   const patient = rx.dim_patient;
                   const doc = rx.dim_prescriber;
@@ -145,6 +173,33 @@ export const PrescriptionDesk: React.FC<PrescriptionDeskProps> = ({
             </tbody>
           </table>
         </div>
+        {filtered.length > 0 && (
+          <div className="prescription-pagination">
+            <p>
+              Showing <strong>{firstVisibleRecord.toLocaleString()}–{lastVisibleRecord.toLocaleString()}</strong> of{' '}
+              <strong>{filtered.length.toLocaleString()}</strong> matching records
+            </p>
+            <div className="prescription-pagination-actions">
+              <button
+                type="button"
+                onClick={() => setPage((currentPage) => Math.max(currentPage - 1, 0))}
+                disabled={page === 0}
+                aria-label="Previous prescription page"
+              >
+                Previous
+              </button>
+              <span>Page {page + 1} of {Math.max(pageCount, 1)}</span>
+              <button
+                type="button"
+                onClick={() => setPage((currentPage) => Math.min(currentPage + 1, pageCount - 1))}
+                disabled={page >= pageCount - 1}
+                aria-label="Next prescription page"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

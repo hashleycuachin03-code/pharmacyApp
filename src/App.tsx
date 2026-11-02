@@ -16,8 +16,12 @@ import {
   dispensePrescription 
 } from './services/supabase';
 import { Header } from './components/Header';
+import { Sidebar } from './components/Sidebar';
+import { SettingsModal } from './components/SettingsModal';
+import type { ThemePreference } from './components/SettingsModal';
 import { KpiMetrics } from './components/KpiMetrics';
 import { AnalyticsView } from './components/AnalyticsView';
+import { AnomalyInsights } from './components/AnomalyInsights';
 import { PrescriptionDesk } from './components/PrescriptionDesk';
 import { DrugFormulary } from './components/DrugFormulary';
 import { PatientDirectory } from './components/PatientDirectory';
@@ -29,6 +33,11 @@ import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('prescriptions');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(
+    () => window.localStorage.getItem('pharmapulse-sidebar-collapsed') === 'true'
+  );
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [drugs, setDrugs] = useState<DimDrug[]>([]);
   const [patients, setPatients] = useState<DimPatient[]>([]);
   const [prescribers, setPrescribers] = useState<DimPrescriber[]>([]);
@@ -36,13 +45,18 @@ export default function App() {
   const [prescriptions, setPrescriptions] = useState<FactPrescription[]>([]);
   const [dataSource, setDataSource] = useState<'supabase' | 'cache'>('cache');
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isDarkMode, setIsDarkMode] = useState(
-    () => {
+  const [themePreference, setThemePreference] = useState<ThemePreference>(() => {
+    const preference = window.localStorage.getItem('pharmapulse-theme-preference');
+    if (preference === 'system' || preference === 'light' || preference === 'dark') return preference;
+
       const savedTheme = window.localStorage.getItem('pharmapulse-theme')
         ?? window.localStorage.getItem('bupc-theme');
-      return savedTheme ? savedTheme === 'dark' : true;
-    }
+      return savedTheme === 'dark' ? 'dark' : savedTheme === 'light' ? 'light' : 'system';
+  });
+  const [systemDarkMode, setSystemDarkMode] = useState(
+    () => window.matchMedia('(prefers-color-scheme: dark)').matches
   );
+  const isDarkMode = themePreference === 'system' ? systemDarkMode : themePreference === 'dark';
 
   // Modals
   const [isDispenseModalOpen, setIsDispenseModalOpen] = useState(false);
@@ -58,6 +72,7 @@ export default function App() {
 
   // Toast Notification state
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
+  const closeSettings = useCallback(() => setIsSettingsOpen(false), []);
 
   const showToast = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
     setToast({ message, type });
@@ -88,15 +103,65 @@ export default function App() {
     }
   }, []);
 
+  const handleSidebarSync = useCallback(() => {
+    setIsMobileSidebarOpen(false);
+    void loadAllData();
+  }, [loadAllData]);
+
   useEffect(() => {
     loadAllData();
   }, [loadAllData]);
 
   useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleSystemThemeChange = (event: MediaQueryListEvent) => setSystemDarkMode(event.matches);
+    setSystemDarkMode(mediaQuery.matches);
+    mediaQuery.addEventListener('change', handleSystemThemeChange);
+    return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
+  }, []);
+
+  useEffect(() => {
     const theme = isDarkMode ? 'dark' : 'light';
     document.documentElement.dataset.theme = theme;
     window.localStorage.setItem('pharmapulse-theme', theme);
-  }, [isDarkMode]);
+    window.localStorage.setItem('pharmapulse-theme-preference', themePreference);
+  }, [isDarkMode, themePreference]);
+
+  useEffect(() => {
+    window.localStorage.setItem('pharmapulse-sidebar-collapsed', String(isSidebarCollapsed));
+  }, [isSidebarCollapsed]);
+
+  useEffect(() => {
+    if (!isSettingsOpen && !isMobileSidebarOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isSettingsOpen, isMobileSidebarOpen]);
+
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsMobileSidebarOpen(false);
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, []);
+
+  const handlePrimaryAction = () => {
+    if (activeTab === 'prescriptions') {
+      setIsDispenseModalOpen(true);
+      return;
+    }
+
+    const actionIds: Partial<Record<TabType, string>> = {
+      drugs: 'add-drug-action',
+      patients: 'add-patient-action',
+      prescribers: 'add-prescriber-action',
+    };
+    const actionId = actionIds[activeTab];
+    if (actionId) document.getElementById(actionId)?.click();
+  };
 
   // Handlers for dimension creation
   const handleAddDrug = async (payload: Omit<DimDrug, 'drug_id'>) => {
@@ -156,7 +221,27 @@ export default function App() {
   };
 
   return (
-    <div className="app-canvas min-h-screen flex flex-col antialiased">
+    <div className="app-canvas app-shell min-h-screen antialiased">
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        dataSource={dataSource}
+        isCollapsed={isSidebarCollapsed}
+        isMobileOpen={isMobileSidebarOpen}
+        isLoading={isLoading}
+        onToggleCollapsed={() => setIsSidebarCollapsed((collapsed) => !collapsed)}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
+        onSync={handleSidebarSync}
+        onOpenSettings={() => {
+          setIsMobileSidebarOpen(false);
+          setIsSettingsOpen(true);
+        }}
+        onOpenSearch={() => {
+          setIsMobileSidebarOpen(false);
+          setActiveTab('explore');
+        }}
+      />
+      <div className={`app-main-shell ${isSidebarCollapsed ? 'sidebar-is-collapsed' : ''}`}>
       {/* Toast Alert */}
       {toast && (
         <div role={toast.type === 'error' ? 'alert' : 'status'} aria-live={toast.type === 'error' ? 'assertive' : 'polite'} aria-atomic="true" className="fixed bottom-5 right-5 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-xl border text-xs font-semibold bg-white animate-in slide-in-from-bottom-5 duration-200">
@@ -170,15 +255,13 @@ export default function App() {
         </div>
       )}
 
-      {/* Header */}
+      {/* Page context bar */}
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        dataSource={dataSource}
-        onReload={loadAllData}
-        isLoading={isLoading}
-        isDarkMode={isDarkMode}
-        onToggleTheme={() => setIsDarkMode((darkMode) => !darkMode)}
+        onOpenMobileNav={() => setIsMobileSidebarOpen(true)}
+        onPrimaryAction={handlePrimaryAction}
+        onNotification={() => showToast('You’re all caught up.', 'info')}
       />
 
       {/* Metric KPI Bar */}
@@ -190,7 +273,7 @@ export default function App() {
       />
 
       {/* Main View Area */}
-      <main id="main-content" aria-label="Pharmacy management dashboard" className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+      <main id="main-content" aria-label="Pharmacy management dashboard" className="dashboard-main px-4 py-6 sm:px-6 lg:px-8 space-y-6">
         {/* VIEW 0: PREDICTIVE ANALYTICS */}
         {activeTab === 'analytics' && (
           <AnalyticsView
@@ -199,6 +282,15 @@ export default function App() {
             isDarkMode={isDarkMode}
             onRefresh={loadAllData}
             onUpdateMetrics={handleUpdateMetrics}
+          />
+        )}
+
+        {activeTab === 'anomalies' && (
+          <AnomalyInsights
+            prescriptions={prescriptions}
+            isDarkMode={isDarkMode}
+            isLoading={isLoading}
+            onRefresh={loadAllData}
           />
         )}
 
@@ -247,7 +339,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="app-footer border-t border-slate-200 bg-white py-4 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-2">
+        <div className="flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-2 px-4 sm:px-6 lg:px-8">
           <p>PharmaPulse Analytics • Real-time pharmacy insights</p>
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5">
@@ -258,6 +350,21 @@ export default function App() {
           </div>
         </div>
       </footer>
+      </div>
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={closeSettings}
+        themePreference={themePreference}
+        onThemeChange={setThemePreference}
+        dataSource={dataSource}
+        isLoading={isLoading}
+        onSync={loadAllData}
+        drugs={drugs}
+        patients={patients}
+        prescribers={prescribers}
+        prescriptions={prescriptions}
+      />
 
       {/* Dispense Modal */}
       <DispenseModal

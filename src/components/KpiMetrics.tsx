@@ -15,10 +15,10 @@ export const KpiMetrics: React.FC<KpiMetricsProps> = ({
   drugCount,
 }) => {
   return (
-    <section className="kpi-bar bg-white border-b border-slate-200 py-3.5 shadow-xs">
+    <section className="kpi-bar bg-white border-b border-slate-200 py-4">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Rx Recorded */}
-        <div className="kpi-card flex items-center space-x-3.5 p-2 bg-slate-50/70 rounded-xl border border-slate-100 sm:border-0 sm:bg-transparent">
+        <div className="kpi-card flex items-center space-x-3.5 p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
           <div className="kpi-icon kpi-icon-blue p-2.5 bg-blue-50 text-blue-700 rounded-lg shrink-0">
             <FileText className="w-5 h-5" />
           </div>
@@ -33,7 +33,7 @@ export const KpiMetrics: React.FC<KpiMetricsProps> = ({
         </div>
 
         {/* Projected 30-Day Demand */}
-        <div className="kpi-card flex items-center space-x-3.5 p-2 bg-slate-50/70 rounded-xl border border-slate-100 sm:border-0 sm:bg-transparent">
+        <div className="kpi-card flex items-center space-x-3.5 p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
           <div className="kpi-icon kpi-icon-amber p-2.5 bg-amber-50 text-amber-700 rounded-lg shrink-0">
             <TrendingUp className="w-5 h-5" />
           </div>
@@ -48,7 +48,7 @@ export const KpiMetrics: React.FC<KpiMetricsProps> = ({
         </div>
 
         {/* Projected 30-Day Budget */}
-        <div className="kpi-card flex items-center space-x-3.5 p-2 bg-slate-50/70 rounded-xl border border-slate-100 sm:border-0 sm:bg-transparent">
+        <div className="kpi-card flex items-center space-x-3.5 p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
           <div className="kpi-icon kpi-icon-emerald p-2.5 bg-emerald-50 text-emerald-700 rounded-lg shrink-0">
             <DollarSign className="w-5 h-5" />
           </div>
@@ -63,7 +63,7 @@ export const KpiMetrics: React.FC<KpiMetricsProps> = ({
         </div>
 
         {/* Active Formulary Items */}
-        <div className="kpi-card flex items-center space-x-3.5 p-2 bg-slate-50/70 rounded-xl border border-slate-100 sm:border-0 sm:bg-transparent">
+        <div className="kpi-card flex items-center space-x-3.5 p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
           <div className="kpi-icon kpi-icon-purple p-2.5 bg-purple-50 text-purple-700 rounded-lg shrink-0">
             <Package className="w-5 h-5" />
           </div>

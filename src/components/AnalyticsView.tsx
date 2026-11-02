@@ -10,13 +10,41 @@ import {
   Sliders, 
   TrendingUp, 
   BarChart3, 
-  AlertCircle 
+  Check,
+  ChevronDown,
+  DollarSign,
+  Package,
+  Search,
+  CircleHelp,
 } from 'lucide-react';
 import { FactPrescription, DimDrug } from '../types/pharmacy';
 
 ChartJS.register(...registerables);
 
 const DEFAULT_VISIBLE_DATES = 7;
+
+const isRawDrugLabel = (name: string) => /^drug[_\s-]*\d+$/i.test(name.trim());
+
+const getMedicationName = (drug?: Partial<DimDrug> | null, fallbackId?: number) => {
+  const genericName = drug?.generic_name?.trim();
+  const brandName = drug?.brand_name?.trim();
+  const storedName = drug?.drug_name?.trim();
+  const primaryName = genericName || (storedName && !isRawDrugLabel(storedName) ? storedName : '') || brandName;
+
+  if (primaryName) {
+    return brandName && brandName.toLowerCase() !== primaryName.toLowerCase()
+      ? `${primaryName} (${brandName})`
+      : primaryName;
+  }
+
+  const rawId = storedName?.match(/^drug[_\s-]*(\d+)$/i)?.[1];
+  return `Medication #${rawId || fallbackId || ''}`.trim();
+};
+
+const getMedicationDetails = (drug: Partial<DimDrug>) => {
+  const details = [drug.dosage_form?.trim(), drug.strength?.trim()].filter(Boolean);
+  return details.join(' · ');
+};
 
 interface AnalyticsViewProps {
   prescriptions: FactPrescription[];
@@ -57,6 +85,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
   // Surge Simulator State
   const [selectedDrugId, setSelectedDrugId] = useState<number | string>('');
+  const [drugQuery, setDrugQuery] = useState('');
+  const [isDrugListOpen, setIsDrugListOpen] = useState(false);
+  const [activeDrugIndex, setActiveDrugIndex] = useState(0);
   const [surgePct, setSurgePct] = useState<number>(0);
   const [simHorizon, setSimHorizon] = useState<number>(30);
   const [simBaselineDays, setSimBaselineDays] = useState<string>('all');
@@ -72,12 +103,44 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   const [simScenarios, setSimScenarios] = useState<Array<{ label: string; units: number; additional: string; value: number }>>([]);
   const [simMessage, setSimMessage] = useState<string | null>(null);
 
-  // Auto-select first drug if none selected
+  const selectedDrug = drugs.find((drug) => drug.drug_id === Number(selectedDrugId));
+  const filteredDrugs = useMemo(() => {
+    const query = drugQuery.trim().toLocaleLowerCase();
+    return drugs.filter((drug) => {
+      const searchableText = [
+        getMedicationName(drug, drug.drug_id),
+        drug.drug_name,
+        drug.generic_name,
+        drug.brand_name,
+        drug.dosage_form,
+        drug.strength,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLocaleLowerCase();
+      return searchableText.includes(query);
+    });
+  }, [drugs, drugQuery]);
+
+  const chooseDrug = (drug: DimDrug) => {
+    setSelectedDrugId(drug.drug_id);
+    setDrugQuery(getMedicationName(drug, drug.drug_id));
+    setIsDrugListOpen(false);
+    setActiveDrugIndex(0);
+  };
+
+  // Auto-select the first available medication when the formulary loads.
   useEffect(() => {
     if (drugs.length > 0 && !selectedDrugId) {
-      setSelectedDrugId(drugs[0].drug_id);
+      chooseDrug(drugs[0]);
     }
   }, [drugs, selectedDrugId]);
+
+  useEffect(() => {
+    if (selectedDrug && !isDrugListOpen) {
+      setDrugQuery(getMedicationName(selectedDrug, selectedDrug.drug_id));
+    }
+  }, [selectedDrug, isDrugListOpen]);
 
   // Linear Regression helper: y = mx + b
   function linearRegression(x: number[], y: number[]) {
@@ -409,7 +472,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
       const drugTotals: Record<string, number> = {};
       prescriptions.forEach((p) => {
-        const name = p.dim_drug?.drug_name || 'Other';
+        const catalogDrug = drugs.find((drug) => drug.drug_id === p.drug_id);
+        const name = getMedicationName(catalogDrug || p.dim_drug, p.drug_id);
         drugTotals[name] = (drugTotals[name] || 0) + Number(p.quantity_dispensed || 0);
       });
 
@@ -466,7 +530,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       financialChartRef.current?.destroy();
       drugShareChartRef.current?.destroy();
     };
-  }, [prescriptions, isDarkMode, onUpdateMetrics]);
+  }, [prescriptions, drugs, isDarkMode, onUpdateMetrics]);
 
   // Run Campus Surge Simulator
   useEffect(() => {
@@ -658,7 +722,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       {/* Row 1: Charts (Demand Velocity & Financial) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Consumption Velocity & Projection (7 cols) */}
-        <div className="lg:col-span-7 bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-3">
+        <div className="analytics-panel lg:col-span-7 bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-3">
           <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
             <div>
               <h3 className="font-bold text-sm text-slate-800">Prescription Consumption Velocity &amp; Projection</h3>
@@ -730,7 +794,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         </div>
 
         {/* Right: Financial Impact & Subsidy Projection (5 cols) */}
-        <div className="lg:col-span-5 bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-3">
+        <div className="analytics-panel lg:col-span-5 bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-3">
           <div className="flex justify-between items-center">
             <div>
               <h3 className="font-bold text-sm text-slate-800">Financial Impact &amp; Subsidy Projection</h3>
@@ -798,7 +862,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       {/* Row 2: Top Drugs & Campus Demand Surge Simulator */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: Top High-Velocity Drugs (5 cols) */}
-        <div className="lg:col-span-5 bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-3">
+        <div className="analytics-panel lg:col-span-5 bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-sm text-slate-800">Highest-Velocity Medications</h3>
             <span className="text-[10px] font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded">Formulary DW</span>
@@ -810,7 +874,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         </div>
 
         {/* Right: Campus Surge Scenario Simulator (7 cols) */}
-        <div className="lg:col-span-7 bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between space-y-4">
+        <div className="analytics-panel lg:col-span-7 bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between space-y-4">
           <div>
             <div className="flex items-center justify-between border-b pb-2">
               <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2">
@@ -826,31 +890,104 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             </p>
 
             {/* Simulator Controls */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 mt-4">
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
+                <label id="target-medication-label" className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
                   Target Medication
                 </label>
-                <select
-                  value={selectedDrugId}
-                  onChange={(e) => setSelectedDrugId(e.target.value)}
-                  className="w-full border border-slate-300 rounded p-2 text-xs bg-white font-medium focus:ring-2 focus:ring-[#0b2545] outline-none"
-                >
-                  {drugs.length === 0 ? (
-                    <option value="">No medications available</option>
-                  ) : (
-                    drugs.map((d) => (
-                      <option key={d.drug_id} value={d.drug_id}>
-                        {d.drug_name}
-                      </option>
-                    ))
+                <div className="relative">
+                  <Search aria-hidden="true" className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    role="combobox"
+                    aria-labelledby="target-medication-label"
+                    aria-autocomplete="list"
+                    aria-expanded={isDrugListOpen}
+                    aria-controls="target-medication-options"
+                    aria-activedescendant={
+                      isDrugListOpen && filteredDrugs[activeDrugIndex]
+                        ? `drug-option-${filteredDrugs[activeDrugIndex].drug_id}`
+                        : undefined
+                    }
+                    autoComplete="off"
+                    disabled={drugs.length === 0}
+                    value={drugQuery}
+                    placeholder={drugs.length === 0 ? 'No medications available' : 'Search medications'}
+                    onFocus={() => {
+                      setDrugQuery('');
+                      setIsDrugListOpen(true);
+                      setActiveDrugIndex(0);
+                    }}
+                    onChange={(event) => {
+                      setDrugQuery(event.target.value);
+                      setIsDrugListOpen(true);
+                      setActiveDrugIndex(0);
+                    }}
+                    onBlur={() => window.setTimeout(() => {
+                      setIsDrugListOpen(false);
+                      setDrugQuery(selectedDrug ? getMedicationName(selectedDrug, selectedDrug.drug_id) : '');
+                    }, 120)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'ArrowDown') {
+                        event.preventDefault();
+                        setIsDrugListOpen(true);
+                        setActiveDrugIndex((index) => Math.min(index + 1, Math.max(filteredDrugs.length - 1, 0)));
+                      } else if (event.key === 'ArrowUp') {
+                        event.preventDefault();
+                        setActiveDrugIndex((index) => Math.max(index - 1, 0));
+                      } else if (event.key === 'Enter' && isDrugListOpen && filteredDrugs[activeDrugIndex]) {
+                        event.preventDefault();
+                        chooseDrug(filteredDrugs[activeDrugIndex]);
+                      } else if (event.key === 'Escape') {
+                        setIsDrugListOpen(false);
+                        setDrugQuery(selectedDrug ? getMedicationName(selectedDrug, selectedDrug.drug_id) : '');
+                      }
+                    }}
+                    className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-8 pr-8 text-xs font-medium text-slate-800 shadow-xs transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                  />
+                  <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                  {isDrugListOpen && (
+                    <ul
+                      id="target-medication-options"
+                      role="listbox"
+                      aria-labelledby="target-medication-label"
+                      className="absolute z-30 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white p-1 shadow-xl"
+                    >
+                      {filteredDrugs.length > 0 ? filteredDrugs.map((drug, index) => (
+                        <li
+                          id={`drug-option-${drug.drug_id}`}
+                          key={drug.drug_id}
+                          role="option"
+                          aria-selected={Number(selectedDrugId) === drug.drug_id}
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => chooseDrug(drug)}
+                          onMouseEnter={() => setActiveDrugIndex(index)}
+                          className={`flex cursor-pointer items-center justify-between gap-2 rounded-md px-2.5 py-2 text-left transition ${
+                            index === activeDrugIndex ? 'bg-indigo-50 text-indigo-900' : 'text-slate-700 hover:bg-slate-50'
+                          }`}
+                        >
+                          <span className="min-w-0">
+                            <span className="block truncate text-xs font-semibold">{getMedicationName(drug, drug.drug_id)}</span>
+                            <span className="block truncate text-[10px] text-slate-500">
+                              {getMedicationDetails(drug) || 'Strength and form not listed'}
+                            </span>
+                          </span>
+                          {Number(selectedDrugId) === drug.drug_id && <Check aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-indigo-600" />}
+                        </li>
+                      )) : (
+                        <li className="px-2.5 py-3 text-center text-xs text-slate-500">No matching medications</li>
+                      )}
+                    </ul>
                   )}
-                </select>
+                </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
+                <label className="flex items-center gap-1 text-[11px] font-bold text-slate-600 uppercase mb-1">
                   Surge Factor
+                  <span title="Adds the selected percentage to the historical daily dispensing rate before projecting demand.">
+                    <CircleHelp className="h-3 w-3 text-slate-400" aria-label="Surge factor help" />
+                  </span>
                 </label>
                 <select
                   value={surgePct}
@@ -880,8 +1017,11 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 uppercase mb-1">
+                <label className="flex items-center gap-1 text-[11px] font-bold text-slate-600 uppercase mb-1">
                   Baseline History
+                  <span title="Uses dated dispensing records within the selected lookback period. The daily rate is total units divided by the calendar days between the first and latest matching records.">
+                    <CircleHelp className="h-3 w-3 text-slate-400" aria-label="Baseline history help" />
+                  </span>
                 </label>
                 <select
                   value={simBaselineDays}
@@ -912,42 +1052,48 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           </div>
 
           {/* Simulation Output Cards */}
-          <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 grid grid-cols-2 xl:grid-cols-4 gap-3 text-center">
-            <div>
-              <p className="text-[10px] uppercase font-bold text-slate-400">Baseline Daily Rate</p>
-              <h5 className="text-base font-extrabold text-slate-800 mt-0.5">
-                {simMessage ? 'N/A' : `${simDailyVelocity.toFixed(2)} units/day`}
-              </h5>
-              <p className="text-[10px] text-slate-400 mt-0.5">
-                {simMessage ? simMessage : simBaselineCoverageText}
-              </p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase font-bold text-amber-700">Forecast Demand</p>
-              <h5 className="text-base font-extrabold text-amber-700 mt-0.5">
-                {simMessage ? 'N/A' : `${simPredictedTotalUnits.toLocaleString()} units`}
-              </h5>
-              <p className="text-[10px] text-slate-400 mt-0.5">Over {simHorizon} days</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase font-bold text-blue-700">Additional Units Needed</p>
-              <h5 className="text-base font-extrabold text-blue-700 mt-0.5">
-                {simMessage ? 'N/A' : simAdditionalUnits}
-              </h5>
-              <p className="text-[10px] text-slate-400 mt-0.5">{simCoverageDaysText}</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase font-bold text-emerald-700">Estimated Billed Value</p>
-              <h5 className="text-base font-extrabold text-emerald-700 mt-0.5">
-                {simMessage
-                  ? 'N/A'
-                  : `₱${simEstimatedBilledValue.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}`}
-              </h5>
-              <p className="text-[10px] text-slate-400 mt-0.5">Based on unit price</p>
-            </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <article className="sim-kpi-card sim-kpi-neutral">
+              <span className="sim-kpi-icon"><BarChart3 aria-hidden="true" className="h-4 w-4" /></span>
+              <div className="min-w-0">
+                <p className="sim-kpi-label">Baseline Daily Rate</p>
+                <h5 className="sim-kpi-value">{simMessage ? 'N/A' : `${simDailyVelocity.toFixed(2)} units/day`}</h5>
+                <p className="sim-kpi-detail" title={simBaselineCoverageText}>
+                  {simMessage || simBaselineCoverageText}
+                </p>
+              </div>
+            </article>
+            <article className="sim-kpi-card sim-kpi-amber">
+              <span className="sim-kpi-icon"><TrendingUp aria-hidden="true" className="h-4 w-4" /></span>
+              <div className="min-w-0">
+                <p className="sim-kpi-label">Forecast Demand</p>
+                <h5 className="sim-kpi-value">{simMessage ? 'N/A' : `${simPredictedTotalUnits.toLocaleString()} units`}</h5>
+                <p className="sim-kpi-detail">Over {simHorizon} days</p>
+              </div>
+            </article>
+            <article className="sim-kpi-card sim-kpi-blue">
+              <span className="sim-kpi-icon"><Package aria-hidden="true" className="h-4 w-4" /></span>
+              <div className="min-w-0">
+                <p className="sim-kpi-label">Additional Units Needed</p>
+                <h5 className="sim-kpi-value">{simMessage ? 'N/A' : simAdditionalUnits}</h5>
+                <p className="sim-kpi-detail">{simCoverageDaysText}</p>
+              </div>
+            </article>
+            <article className="sim-kpi-card sim-kpi-emerald">
+              <span className="sim-kpi-icon"><DollarSign aria-hidden="true" className="h-4 w-4" /></span>
+              <div className="min-w-0">
+                <p className="sim-kpi-label">Estimated Billed Value</p>
+                <h5 className="sim-kpi-value">
+                  {simMessage
+                    ? 'N/A'
+                    : `₱${simEstimatedBilledValue.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}`}
+                </h5>
+                <p className="sim-kpi-detail">Based on historical billed amount</p>
+              </div>
+            </article>
           </div>
 
           <p className="text-[10px] text-slate-400">
@@ -958,33 +1104,37 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             {/* Scenario Table */}
             <section>
-              <h4 className="text-xs font-bold text-slate-700 mb-2">Scenario Comparison</h4>
+              <h4 className="mb-2 text-xs font-bold text-slate-700">Scenario Comparison</h4>
               <div className="overflow-x-auto border border-slate-200 rounded-lg">
-                <table className="w-full text-left text-[11px] text-slate-600">
-                  <thead className="bg-slate-100 text-slate-700 uppercase font-bold">
+                <table className="scenario-table w-full min-w-[500px] text-left text-[11px] text-slate-600">
+                  <thead className="bg-slate-50 text-slate-500 uppercase font-bold">
                     <tr>
-                      <th className="p-2">Scenario</th>
-                      <th className="p-2 text-right">Demand</th>
-                      <th className="p-2 text-right">Additional</th>
-                      <th className="p-2 text-right">Est. Value</th>
+                      <th scope="col">Scenario</th>
+                      <th scope="col" className="text-right">Demand</th>
+                      <th scope="col" className="text-right">Additional</th>
+                      <th scope="col" className="text-right">Est. Value</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 font-medium">
+                  <tbody className="font-medium">
                     {simMessage || simScenarios.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="p-3 text-center text-slate-400">
+                        <td colSpan={4} className="px-3 py-5 text-center text-slate-400">
                           {simMessage || 'Select a medication to compare scenarios.'}
                         </td>
                       </tr>
                     ) : (
                       simScenarios.map((sc, i) => (
-                        <tr key={i} className="hover:bg-slate-50">
-                          <td className="p-2 font-semibold text-slate-800">{sc.label}</td>
-                          <td className="p-2 text-right font-bold text-amber-700">
-                            {sc.units.toLocaleString()} units
+                        <tr key={i}>
+                          <td className="font-semibold text-slate-800">
+                            <span className={`scenario-badge ${i === 0 ? 'scenario-badge-neutral' : i === 1 ? 'scenario-badge-blue' : 'scenario-badge-amber'}`}>
+                              {sc.label}
+                            </span>
                           </td>
-                          <td className="p-2 text-right text-blue-700">{sc.additional}</td>
-                          <td className="p-2 text-right font-bold text-emerald-700">
+                          <td className="text-right font-bold text-amber-700">
+                            {sc.units.toLocaleString()} <span className="font-medium text-slate-500">units</span>
+                          </td>
+                          <td className="text-right text-blue-700">{sc.additional}</td>
+                          <td className="text-right font-bold text-emerald-700">
                             ₱{sc.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </td>
                         </tr>
