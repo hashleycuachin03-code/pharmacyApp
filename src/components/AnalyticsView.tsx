@@ -17,7 +17,7 @@ import {
   Search,
   CircleHelp,
 } from 'lucide-react';
-import { FactPrescription, DimDrug } from '../types/pharmacy';
+import { FactPrescription, DimDrug, DimPharmacy } from '../types/pharmacy';
 
 ChartJS.register(...registerables);
 
@@ -49,6 +49,7 @@ const getMedicationDetails = (drug: Partial<DimDrug>) => {
 interface AnalyticsViewProps {
   prescriptions: FactPrescription[];
   drugs: DimDrug[];
+  pharmacies: DimPharmacy[];
   isDarkMode: boolean;
   onRefresh: () => void;
 }
@@ -56,6 +57,7 @@ interface AnalyticsViewProps {
 export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   prescriptions,
   drugs,
+  pharmacies,
   isDarkMode,
   onRefresh,
 }) => {
@@ -90,6 +92,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   const [simHorizon, setSimHorizon] = useState<number>(30);
   const [simBaselineDays, setSimBaselineDays] = useState<string>('all');
   const [simStockOnHand, setSimStockOnHand] = useState<string>('50');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [pharmacyId, setPharmacyId] = useState('');
 
   // Simulation outputs
   const [simDailyVelocity, setSimDailyVelocity] = useState<number>(0);
@@ -100,6 +105,22 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   const [simCoverageDaysText, setSimCoverageDaysText] = useState<string>('');
   const [simScenarios, setSimScenarios] = useState<Array<{ label: string; units: number; additional: string; value: number }>>([]);
   const [simMessage, setSimMessage] = useState<string | null>(null);
+
+  const filteredPrescriptions = useMemo(
+    () => prescriptions.filter((prescription) => {
+      const date = prescription.dim_date?.full_date;
+      return (
+        (!startDate || (date != null && date >= startDate))
+        && (!endDate || (date != null && date <= endDate))
+        && (!pharmacyId || Number(prescription.pharmacy_id) === Number(pharmacyId))
+      );
+    }),
+    [prescriptions, startDate, endDate, pharmacyId]
+  );
+  const availablePharmacies = useMemo(
+    () => [...pharmacies].sort((a, b) => a.branch_name.localeCompare(b.branch_name)),
+    [pharmacies]
+  );
 
   const selectedDrug = drugs.find((drug) => drug.drug_id === Number(selectedDrugId));
   const filteredDrugs = useMemo(() => {
@@ -278,11 +299,11 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     ChartJS.defaults.color = isDarkMode ? '#cbd5e1' : '#475569';
     ChartJS.defaults.borderColor = isDarkMode ? '#334155' : '#e2e8f0';
 
-    if (prescriptions.length === 0) return;
+    if (filteredPrescriptions.length === 0) return;
 
     // Group prescription facts by chronological date
     const dateMap: Record<string, { units: number; billed: number; cost: number; insurance: number }> = {};
-    prescriptions.forEach((p) => {
+    filteredPrescriptions.forEach((p) => {
       const dStr = p.dim_date?.full_date || '2026-10-01';
       if (!dateMap[dStr]) {
         dateMap[dStr] = { units: 0, billed: 0, cost: 0, insurance: 0 };
@@ -459,7 +480,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       if (drugShareChartRef.current) drugShareChartRef.current.destroy();
 
       const drugTotals: Record<string, number> = {};
-      prescriptions.forEach((p) => {
+      filteredPrescriptions.forEach((p) => {
         const catalogDrug = drugs.find((drug) => drug.drug_id === p.drug_id);
         const name = getMedicationName(catalogDrug || p.dim_drug, p.drug_id);
         drugTotals[name] = (drugTotals[name] || 0) + Number(p.quantity_dispensed || 0);
@@ -518,7 +539,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       financialChartRef.current?.destroy();
       drugShareChartRef.current?.destroy();
     };
-  }, [prescriptions, drugs, isDarkMode]);
+  }, [filteredPrescriptions, drugs, isDarkMode]);
 
   // Run Campus Surge Simulator
   useEffect(() => {
@@ -533,7 +554,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       return;
     }
 
-    const datedMatches = prescriptions
+    const datedMatches = filteredPrescriptions
       .filter((prescription) => Number(prescription.drug_id) === drugId)
       .map((prescription) => ({
         date: Date.parse(`${prescription.dim_date?.full_date || ''}T00:00:00Z`),
@@ -682,7 +703,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     return () => {
       simForecastChartRef.current?.destroy();
     };
-  }, [selectedDrugId, surgePct, simHorizon, simBaselineDays, simStockOnHand, prescriptions, isDarkMode]);
+  }, [selectedDrugId, surgePct, simHorizon, simBaselineDays, simStockOnHand, filteredPrescriptions, isDarkMode]);
 
   return (
     <div className="space-y-6">
@@ -706,6 +727,78 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           <span>Refresh Models</span>
         </button>
       </div>
+
+      <section
+        aria-label="Analytics filters"
+        className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-xs sm:flex-row sm:items-end"
+      >
+        <div>
+          <label htmlFor="analytics-start-date" className="mb-1 block text-[11px] font-bold uppercase text-slate-600">
+            From
+          </label>
+          <input
+            id="analytics-start-date"
+            type="date"
+            value={startDate}
+            max={endDate || undefined}
+            onChange={(event) => setStartDate(event.target.value)}
+            className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs text-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 sm:w-auto"
+          />
+        </div>
+        <div>
+          <label htmlFor="analytics-end-date" className="mb-1 block text-[11px] font-bold uppercase text-slate-600">
+            To
+          </label>
+          <input
+            id="analytics-end-date"
+            type="date"
+            value={endDate}
+            min={startDate || undefined}
+            onChange={(event) => setEndDate(event.target.value)}
+            className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs text-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 sm:w-auto"
+          />
+        </div>
+        <div>
+          <label htmlFor="analytics-pharmacy" className="mb-1 block text-[11px] font-bold uppercase text-slate-600">
+            Pharmacy
+          </label>
+          <select
+            id="analytics-pharmacy"
+            value={pharmacyId}
+            onChange={(event) => setPharmacyId(event.target.value)}
+            className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-xs text-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 sm:min-w-48"
+          >
+            <option value="">All pharmacies</option>
+            {availablePharmacies.map((pharmacy) => (
+              <option key={pharmacy.pharmacy_id} value={pharmacy.pharmacy_id}>
+                {pharmacy.branch_name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <p className="text-[11px] text-slate-500 sm:ml-auto" aria-live="polite">
+          Showing {filteredPrescriptions.length.toLocaleString()} of {prescriptions.length.toLocaleString()} prescriptions
+        </p>
+        {(startDate || endDate || pharmacyId) && (
+          <button
+            type="button"
+            onClick={() => {
+              setStartDate('');
+              setEndDate('');
+              setPharmacyId('');
+            }}
+            className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
+          >
+            Clear filters
+          </button>
+        )}
+      </section>
+
+      {filteredPrescriptions.length === 0 && (
+        <p role="status" className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+          No prescriptions match the selected date range and pharmacy.
+        </p>
+      )}
 
       {/* Row 1: Charts (Demand Velocity & Financial) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -777,7 +870,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             </div>
           </div>
           <div className="h-64 relative">
-            <canvas ref={demandCanvasRef}></canvas>
+            {filteredPrescriptions.length > 0 && <canvas ref={demandCanvasRef}></canvas>}
           </div>
         </div>
 
@@ -842,7 +935,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             </div>
           </div>
           <div className="h-64 relative">
-            <canvas ref={financialCanvasRef}></canvas>
+            {filteredPrescriptions.length > 0 && <canvas ref={financialCanvasRef}></canvas>}
           </div>
         </div>
       </div>
@@ -857,7 +950,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           </div>
           <p className="text-[11px] text-slate-400">Top medications ranked by total units dispensed</p>
           <div className="h-72 relative">
-            <canvas ref={drugShareCanvasRef}></canvas>
+            {filteredPrescriptions.length > 0 && <canvas ref={drugShareCanvasRef}></canvas>}
           </div>
         </div>
 

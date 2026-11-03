@@ -292,6 +292,7 @@ export default function App() {
             <AnalyticsView
               prescriptions={prescriptions}
               drugs={drugs}
+              pharmacies={pharmacies}
               isDarkMode={isDarkMode}
               onRefresh={loadAllData}
             />
