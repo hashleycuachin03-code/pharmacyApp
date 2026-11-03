@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { lazy, Suspense, useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   DimDrug, 
   DimPatient, 
@@ -20,18 +20,33 @@ import { Sidebar } from './components/Sidebar';
 import { SettingsModal } from './components/SettingsModal';
 import type { ThemePreference } from './components/SettingsModal';
 import { KpiMetrics } from './components/KpiMetrics';
-import { AnalyticsView } from './components/AnalyticsView';
-import { AnomalyInsights } from './components/AnomalyInsights';
-import { PrescriptionDesk } from './components/PrescriptionDesk';
-import { DrugFormulary } from './components/DrugFormulary';
-import { PatientDirectory } from './components/PatientDirectory';
-import { PrescriberDirectory } from './components/PrescriberDirectory';
-import { PharmacyExplorer } from './components/PharmacyExplorer';
 import { DispenseModal } from './components/DispenseModal';
 import { PrintableSlip } from './components/PrintableSlip';
 import { HomeView } from './components/HomeView';
 import { calculateThirtyDayProjection } from './services/analytics';
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react';
+
+const AnalyticsView = lazy(() =>
+  import('./components/AnalyticsView').then(({ AnalyticsView }) => ({ default: AnalyticsView }))
+);
+const AnomalyInsights = lazy(() =>
+  import('./components/AnomalyInsights').then(({ AnomalyInsights }) => ({ default: AnomalyInsights }))
+);
+const PrescriptionDesk = lazy(() =>
+  import('./components/PrescriptionDesk').then(({ PrescriptionDesk }) => ({ default: PrescriptionDesk }))
+);
+const DrugFormulary = lazy(() =>
+  import('./components/DrugFormulary').then(({ DrugFormulary }) => ({ default: DrugFormulary }))
+);
+const PatientDirectory = lazy(() =>
+  import('./components/PatientDirectory').then(({ PatientDirectory }) => ({ default: PatientDirectory }))
+);
+const PrescriberDirectory = lazy(() =>
+  import('./components/PrescriberDirectory').then(({ PrescriberDirectory }) => ({ default: PrescriberDirectory }))
+);
+const PharmacyExplorer = lazy(() =>
+  import('./components/PharmacyExplorer').then(({ PharmacyExplorer }) => ({ default: PharmacyExplorer }))
+);
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('home');
@@ -257,74 +272,82 @@ export default function App() {
 
       {/* Main View Area */}
       <main id="main-content" aria-label="Pharmacy management dashboard" className="dashboard-main px-4 py-6 sm:px-6 lg:px-8 space-y-6">
-        {activeTab === 'home' && (
-          <HomeView
-            prescriptions={prescriptions}
-            onNavigate={setActiveTab}
-            onNewPrescription={() => setIsDispenseModalOpen(true)}
-          />
-        )}
+        <Suspense
+          fallback={
+            <div role="status" className="py-8 text-center text-sm text-slate-500">
+              Loading view…
+            </div>
+          }
+        >
+          {activeTab === 'home' && (
+            <HomeView
+              prescriptions={prescriptions}
+              onNavigate={setActiveTab}
+              onNewPrescription={() => setIsDispenseModalOpen(true)}
+            />
+          )}
 
-        {/* VIEW 0: PREDICTIVE ANALYTICS */}
-        {activeTab === 'analytics' && (
-          <AnalyticsView
-            prescriptions={prescriptions}
-            drugs={drugs}
-            isDarkMode={isDarkMode}
-            onRefresh={loadAllData}
-          />
-        )}
+          {/* VIEW 0: PREDICTIVE ANALYTICS */}
+          {activeTab === 'analytics' && (
+            <AnalyticsView
+              prescriptions={prescriptions}
+              drugs={drugs}
+              isDarkMode={isDarkMode}
+              onRefresh={loadAllData}
+            />
+          )}
 
-        {activeTab === 'anomalies' && (
-          <AnomalyInsights
-            prescriptions={prescriptions}
-            isDarkMode={isDarkMode}
-            isLoading={isLoading}
-            onRefresh={loadAllData}
-          />
-        )}
+          {activeTab === 'anomalies' && (
+            <AnomalyInsights
+              prescriptions={prescriptions}
+              isDarkMode={isDarkMode}
+              isLoading={isLoading}
+              onRefresh={loadAllData}
+            />
+          )}
 
-        {/* VIEW 1: PRESCRIPTION DESK */}
-        {activeTab === 'prescriptions' && (
-          <PrescriptionDesk
-            prescriptions={prescriptions}
-            onOpenDispenseModal={() => setIsDispenseModalOpen(true)}
-            onOpenSlipModal={(rx) => setSlipPrescription(rx)}
-          />
-        )}
+          {/* VIEW 1: PRESCRIPTION DESK */}
+          {activeTab === 'prescriptions' && (
+            <PrescriptionDesk
+              prescriptions={prescriptions}
+              onOpenDispenseModal={() => setIsDispenseModalOpen(true)}
+              onOpenSlipModal={(rx) => setSlipPrescription(rx)}
+            />
+          )}
 
-        {activeTab === 'explore' && (
-          <PharmacyExplorer
-            prescriptions={prescriptions}
-            drugs={drugs}
-            prescribers={prescribers}
-            isDarkMode={isDarkMode}
-          />
-        )}
+          {activeTab === 'explore' && (
+            <PharmacyExplorer
+              prescriptions={prescriptions}
+              drugs={drugs}
+              prescribers={prescribers}
+              isDarkMode={isDarkMode}
+            />
+          )}
 
-        {/* VIEW 2: DRUG FORMULARY */}
-        {activeTab === 'drugs' && (
-          <DrugFormulary
-            drugs={drugs}
-            onAddDrug={handleAddDrug}
-          />
-        )}
+          {/* VIEW 2: DRUG FORMULARY */}
+          {activeTab === 'drugs' && (
+            <DrugFormulary
+              drugs={drugs}
+              onAddDrug={handleAddDrug}
+            />
+          )}
 
-        {/* VIEW 3: PATIENT DIRECTORY */}
-        {activeTab === 'patients' && (
-          <PatientDirectory
-            patients={patients}
-            onAddPatient={handleAddPatient}
-          />
-        )}
+          {/* VIEW 3: PATIENT DIRECTORY */}
+          {activeTab === 'patients' && (
+            <PatientDirectory
+              patients={patients}
+              onAddPatient={handleAddPatient}
+            />
+          )}
 
-        {/* VIEW 4: PRESCRIBERS */}
-        {activeTab === 'prescribers' && (
-          <PrescriberDirectory
-            prescribers={prescribers}
-            onAddPrescriber={handleAddPrescriber}
-          />
-        )}
+          {/* VIEW 4: PRESCRIBERS */}
+          {activeTab === 'prescribers' && (
+            <PrescriberDirectory
+              prescribers={prescribers}
+              onAddPrescriber={handleAddPrescriber}
+            />
+          )}
+        </Suspense>
       </main>
 
       {/* Footer */}

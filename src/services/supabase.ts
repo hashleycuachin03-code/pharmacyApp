@@ -67,10 +67,7 @@ export async function fetchPrescriptions(): Promise<{ data: FactPrescription[]; 
   try {
     const pageSize = 1000;
     const prescriptionRows: any[] = [];
-    let offset = 0;
-    let hasMore = true;
-
-    while (hasMore) {
+    const fetchPage = async (offset: number) => {
       const { data, error } = await supabase
         .from('fact_prescription')
         .select(`
@@ -91,14 +88,30 @@ export async function fetchPrescriptions(): Promise<{ data: FactPrescription[]; 
         dim_pharmacy (branch_name, store_number),
         dim_date (full_date)
       `)
-        .order('prescription_fact_id', { ascending: true })
+        .order('prescription_fact_id', { ascending: false })
         .range(offset, offset + pageSize - 1);
 
       if (error) throw error;
+      return data || [];
+    };
 
-      prescriptionRows.push(...(data || []));
-      hasMore = (data?.length || 0) === pageSize;
-      offset += pageSize;
+    let offset = 0;
+    let page = await fetchPage(offset);
+    prescriptionRows.push(...page);
+
+    while (page.length === pageSize) {
+      const nextPages = await Promise.all([
+        fetchPage(offset + pageSize),
+        fetchPage(offset + 2 * pageSize),
+      ]);
+
+      for (const nextPage of nextPages) {
+        prescriptionRows.push(...nextPage);
+      }
+
+      page = nextPages[1];
+      offset += 2 * pageSize;
+      if (nextPages.some((nextPage) => nextPage.length < pageSize)) break;
     }
 
     const mapped = prescriptionRows
@@ -119,10 +132,7 @@ export async function fetchPrescriptions(): Promise<{ data: FactPrescription[]; 
         dim_prescriber: item.dim_prescriber,
         dim_pharmacy: item.dim_pharmacy,
         dim_date: item.dim_date,
-      }))
-      .sort((prescriptionA, prescriptionB) =>
-        prescriptionB.prescription_fact_id - prescriptionA.prescription_fact_id
-      );
+      }));
 
     localPrescriptions = mapped;
     return { data: mapped, source: 'supabase' };
