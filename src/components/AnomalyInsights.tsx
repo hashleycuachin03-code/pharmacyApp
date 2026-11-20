@@ -323,7 +323,7 @@ export const AnomalyInsights: React.FC<AnomalyInsightsProps> = ({
       </div>
 
       <p className="anomaly-method-note">
-        Detection compares daily totals with the preceding 14-calendar-day median after at least 7 baseline days. A signal must differ by at least 75% and exceed a 3.5 robust-Z threshold based on median absolute deviation (MAD). Missing dates count as zero. Signals are indicators for review, not confirmed incidents.
+        This MAD-based detector is the primary anomaly method. It compares daily totals with the preceding 14-calendar-day median after at least 7 baseline days; a signal must differ by at least 75% and exceed a 3.5 robust-Z threshold. Missing dates count as zero. Signals are indicators for review, not confirmed incidents. The separate Analytics view uses linear regression as a secondary demand-trend method; it does not determine anomaly flags.
       </p>
     </div>
   );

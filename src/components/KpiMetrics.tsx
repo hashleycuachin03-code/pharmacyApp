@@ -32,14 +32,14 @@ export const KpiMetrics: React.FC<KpiMetricsProps> = ({
           </div>
         </div>
 
-        {/* Projected 30-Day Demand */}
+        {/* Average-based 30-day demand estimate */}
         <div className="kpi-card flex items-center space-x-3.5 p-3 bg-white rounded-xl border border-slate-200 shadow-xs">
           <div className="kpi-icon kpi-icon-amber p-2.5 bg-amber-50 text-amber-700 rounded-lg shrink-0">
             <TrendingUp className="w-5 h-5" />
           </div>
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-              Projected 30-Day Demand
+              Average-Based 30-Day Demand
             </p>
             <h4 className="text-xl sm:text-2xl font-extrabold text-amber-700 leading-tight">
               {projected30DayUnits > 0 ? `~${projected30DayUnits.toLocaleString()} units` : '-- units'}

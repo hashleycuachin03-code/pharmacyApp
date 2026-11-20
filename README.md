@@ -19,9 +19,10 @@
 - A compact header shows the current page, global search, and notifications; operational add actions remain within their respective views.
 
 ### 2. Predictive Analytics & Demand Forecasting
-- **Linear Regression Demand Velocity Model**:
-  - Fits chronological prescription events to a linear regression model ($y = mx + b$).
-  - Projects 30-day medication consumption and estimated budget requirements.
+- **Secondary Linear Regression Demand-Trend Model**:
+  - Fits daily dispensed-unit totals in date order to a linear regression model ($y = mx + b$), using a sequential index for observed dates.
+  - Projects three points 10 days apart for an exploratory 30-day trend; the app does not calculate held-out accuracy metrics.
+  - The headline 30-day demand KPI uses average daily demand, not the regression projection.
   - Interactive chart navigation: Pan left/right, zoom in/out, and reset zoom to analyze date ranges.
 - **Financial & Subsidy Breakdown**:
   - Visualizes patient out-of-pocket expenses versus institutional and PhilHealth insurance subsidies via stacked bar charts.
@@ -74,6 +75,7 @@ Built on a standard dimensional data modeling framework:
 - **Offline Cache Mode**: Fallback to locally cached datasets when the remote database is unavailable.
 
 ### 6. Anomaly Insights & AI Explanations
+- MAD-based anomaly detection is the primary data-mining method; the regression forecast is secondary and does not determine anomaly flags.
 - Highlights unusual daily dispensing and billed-value changes in a 90-day chart.
 - Compares each day against a rolling 14-day median and a 3.5 robust-Z threshold (median absolute deviation) after at least 7 baseline days.
 - Provides a local statistical summary and an optional AI explanation with operational hypotheses and practical data checks.

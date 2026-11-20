@@ -808,7 +808,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             <div>
               <h3 className="font-bold text-sm text-slate-800">Prescription Consumption Velocity &amp; Projection</h3>
               <p className="text-[11px] text-slate-400">
-                Historical units dispensed (solid) vs. projected regression trend (dashed)
+                Historical daily units (solid) vs. secondary linear-regression trend (dashed; three 10-day steps). No holdout accuracy measured.
               </p>
             </div>
             <div className="flex items-center gap-1.5 self-end sm:self-auto">
